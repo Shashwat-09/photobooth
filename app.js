@@ -246,11 +246,29 @@ async function handleUpload(event) {
     photos = [];
     const filesToProcess = files.slice(0, 4);
     
-    for (const file of filesToProcess) {
-        const img = await loadImage(file);
-        photos.push(img);
+    // Load images with error handling
+    for (let i = 0; i < filesToProcess.length; i++) {
+        const file = filesToProcess[i];
+        try {
+            const img = await loadImage(file);
+            photos.push(img);
+        } catch (error) {
+            console.error(`Error loading image ${i + 1}:`, error);
+            // Show user-friendly error message
+            alert(`Error loading image "${file.name}": ${error.message}\n\nPlease try a different image file.`);
+            // Use a placeholder or skip this image
+            // For now, we'll skip it and continue with remaining images
+            continue;
+        }
     }
     
+    // If no images loaded successfully, show error and return
+    if (photos.length === 0) {
+        alert('No images could be loaded. Please try uploading valid image files (JPG, PNG, GIF, or WebP).');
+        return;
+    }
+    
+    // Fill remaining slots with duplicates of the last successfully loaded image
     while (photos.length < 4) {
         photos.push(photos[photos.length - 1]);
     }
@@ -260,10 +278,55 @@ async function handleUpload(event) {
 }
 
 function loadImage(file) {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            reject(new Error('File is not an image'));
+            return;
+        }
+        
         const img = new Image();
-        img.onload = () => resolve(img);
-        img.src = URL.createObjectURL(file);
+        let objectUrl = null;
+        let timeoutId = null;
+        
+        // Cleanup function
+        const cleanup = () => {
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
+                objectUrl = null;
+            }
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+                timeoutId = null;
+            }
+        };
+        
+        // Success handler
+        img.onload = () => {
+            cleanup();
+            resolve(img);
+        };
+        
+        // Error handler
+        img.onerror = () => {
+            cleanup();
+            reject(new Error('Failed to load image. The file may be corrupted or unsupported.'));
+        };
+        
+        // Timeout safety (10 seconds)
+        timeoutId = setTimeout(() => {
+            cleanup();
+            reject(new Error('Image loading timed out. The file may be too large or corrupted.'));
+        }, 10000);
+        
+        // Create object URL and start loading
+        try {
+            objectUrl = URL.createObjectURL(file);
+            img.src = objectUrl;
+        } catch (error) {
+            cleanup();
+            reject(new Error('Failed to create image from file: ' + error.message));
+        }
     });
 }
 
