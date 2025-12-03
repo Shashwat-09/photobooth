@@ -3,81 +3,263 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Retro Photobooth</title>
+    <title>Photobooth</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&family=Architects+Daughter&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <!-- Film grain overlay -->
-    <div class="film-grain"></div>
-    
-    <div class="container">
-        <header>
-            <h1>Retro Photobooth</h1>
-            <p class="tagline">Capture memories in vintage style</p>
-        </header>
-
-        <main>
-            <!-- Photobooth Machine -->
-            <div class="photobooth-machine">
-                <!-- Camera Section -->
-                <div class="camera-section">
-                    <div class="vintage-frame">
-                        <div class="screen-bezel">
-                            <video id="webcam" autoplay playsinline></video>
-                            <canvas id="preview-canvas" class="hidden"></canvas>
-                            <div id="countdown" class="countdown hidden"></div>
-                            <div id="flash" class="flash"></div>
-                        </div>
-                        <div class="screen-label">LIVE PREVIEW</div>
-                    </div>
-                    
-                    <!-- Controls -->
-                    <div class="controls">
-                        <button id="start-btn" class="btn btn-primary">
-                            <span class="btn-icon">⏻</span> Start Camera
-                        </button>
-                        <button id="capture-btn" class="btn btn-capture hidden">
-                            <span class="btn-icon">📷</span> Take Photos
-                        </button>
-                    </div>
-                    
-                    <div id="status" class="status-message"></div>
+    <div class="app-container">
+        
+        <!-- PAGE 1: Landing Page -->
+        <section id="landing-page" class="page active">
+            <div class="booth-exterior">
+                <div class="booth-sign">
+                    <span>PHOTOBOOTH</span>
                 </div>
-
-                <!-- Photo Strip Section -->
-                <div class="strip-section">
-                    <div class="strip-holder">
-                        <div class="strip-slot">
-                            <canvas id="strip-canvas" class="photo-strip hidden"></canvas>
-                            <div id="strip-placeholder" class="strip-placeholder">
-                                <div class="placeholder-icon">🎞️</div>
-                                <p>Your photo strip<br>will appear here</p>
-                            </div>
+                
+                <div class="booth-body">
+                    <div class="booth-left">
+                        <div class="featured-strips">
+                            <div class="mini-strip"></div>
+                            <div class="mini-strip"></div>
+                            <div class="mini-strip"></div>
+                            <div class="mini-strip"></div>
+                        </div>
+                        <p class="featured-label">featured<br>strips</p>
+                        <div class="photo-slot-exterior">
+                            <div class="slot-opening"></div>
                         </div>
                     </div>
                     
-                    <!-- Strip Controls -->
-                    <div class="strip-controls hidden" id="strip-controls">
-                        <button id="retake-btn" class="btn btn-secondary">
-                            <span class="btn-icon">↺</span> Retake
+                    <div class="booth-center">
+                        <div class="curtain">
+                            <div class="curtain-lines"></div>
+                        </div>
+                        <button class="enter-btn" onclick="goToPage('select-page')">
+                            enter <span class="arrow">→</span>
                         </button>
-                        <button id="download-btn" class="btn btn-primary">
-                            <span class="btn-icon">⬇</span> Download
-                        </button>
+                        <div class="booth-stool"></div>
                     </div>
+                    
+                    <div class="booth-right">
+                        <div class="vent-lines"></div>
+                    </div>
+                </div>
+                
+                <p class="credits">made by <a href="https://github.com/Shashwat-09" target="_blank">@Shashwat-09</a></p>
+            </div>
+            
+            <footer class="landing-footer">
+                <a href="#">Privacy Policy</a>
+                <a href="#">FAQ</a>
+                <a href="#">About Me</a>
+                <a href="#">Contact Me</a>
+            </footer>
+        </section>
+
+        <!-- PAGE 2: Select Mode Page -->
+        <section id="select-page" class="page">
+            <div class="booth-interior">
+                <div class="screen-frame">
+                    <div class="screen-screws">
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                    </div>
+                    <div class="screen-inner">
+                        <button class="mode-btn" onclick="startCamera('take')">
+                            take photo <span class="camera-icon">📷</span>
+                        </button>
+                        <button class="mode-btn" onclick="triggerUpload()">
+                            upload photo <span class="upload-icon">↑</span>
+                        </button>
+                        <input type="file" id="photo-upload" accept="image/*" multiple style="display:none" onchange="handleUpload(event)">
+                    </div>
+                </div>
+                
+                <p class="eye-level">eye<br>level <span class="arrow-right">→</span></p>
+                
+                <div class="price-tag">
+                    <span class="price">$0</span>
+                    <span class="equals">=</span>
+                    <span class="pics">4pics</span>
+                </div>
+                
+                <div class="filter-toggle">
+                    <span class="filter-label" id="bw-label">b&w</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="color-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="filter-label" id="color-label">color</span>
+                </div>
+                
+                <div class="instructions-panel">
+                    <div class="instruction">
+                        <span class="step-num">1</span>
+                        <p>Choose<br>black & white<br>or color<br>filters</p>
+                    </div>
+                    <div class="instruction">
+                        <span class="step-num">2</span>
+                        <p>Wait for<br>green light<br>and press<br>button<br>to start</p>
+                    </div>
+                    <div class="instruction">
+                        <span class="step-num">3</span>
+                        <p>Wait outside<br>for your photo<br>to be printed!</p>
+                    </div>
+                </div>
+                
+                <div class="start-panel">
+                    <span class="start-label" id="start-label"></span>
+                    <div class="indicator-light" id="indicator-light"></div>
+                    <div class="start-button-frame">
+                        <button class="start-button" id="start-button" disabled onclick="goToPage('camera-page')"></button>
+                    </div>
+                    <div class="photo-dispenser"></div>
                 </div>
             </div>
-        </main>
+        </section>
 
-        <footer>
-            <p>Insert coin & smile! ✨</p>
-        </footer>
+        <!-- PAGE 3: Camera/Capture Page -->
+        <section id="camera-page" class="page">
+            <div class="booth-interior">
+                <div class="screen-frame">
+                    <div class="screen-screws">
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                    </div>
+                    <div class="screen-inner camera-screen">
+                        <video id="webcam" autoplay playsinline></video>
+                        <div id="countdown-overlay" class="countdown-overlay hidden">
+                            <span id="countdown-number"></span>
+                        </div>
+                        <div id="flash-overlay" class="flash-overlay"></div>
+                        <div class="photo-counter" id="photo-counter">0/4</div>
+                    </div>
+                </div>
+                
+                <p class="eye-level">eye<br>level <span class="arrow-right">→</span></p>
+                
+                <div class="price-tag">
+                    <span class="price">$0</span>
+                    <span class="equals">=</span>
+                    <span class="pics">4pics</span>
+                </div>
+                
+                <div class="filter-toggle">
+                    <span class="filter-label">b&w</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="color-toggle-camera" onchange="syncColorToggle(this)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                    <span class="filter-label">color</span>
+                </div>
+                
+                <div class="instructions-panel">
+                    <div class="instruction">
+                        <span class="step-num">1</span>
+                        <p>Choose<br>black & white<br>or color<br>filters</p>
+                    </div>
+                    <div class="instruction">
+                        <span class="step-num">2</span>
+                        <p>Wait for<br>green light<br>and press<br>button<br>to start</p>
+                    </div>
+                    <div class="instruction">
+                        <span class="step-num">3</span>
+                        <p>Wait outside<br>for your photo<br>to be printed!</p>
+                    </div>
+                </div>
+                
+                <div class="start-panel">
+                    <span class="start-label" id="camera-start-label">start</span>
+                    <div class="indicator-light green" id="camera-indicator"></div>
+                    <div class="start-button-frame">
+                        <button class="start-button" id="capture-button" onclick="startCapture()"></button>
+                    </div>
+                    <div class="photo-dispenser"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 4: Printing Page -->
+        <section id="printing-page" class="page">
+            <div class="printing-container">
+                <div class="printer-frame">
+                    <div class="printer-screws">
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                        <span class="screw"></span>
+                    </div>
+                    <div class="printer-message">
+                        <p>PHOTOS</p>
+                        <p>DELIVERED</p>
+                        <p>HERE IN</p>
+                        <p class="seconds-text">3 SECONDS</p>
+                        <span class="down-arrow">↓</span>
+                    </div>
+                </div>
+                <div class="printer-slot">
+                    <div class="slot-inner"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 5: Result/Pickup Page -->
+        <section id="result-page" class="page">
+            <div class="result-container">
+                <div class="result-header">
+                    <p class="your-text">your</p>
+                    <p class="photostrip-text">photostrip!</p>
+                </div>
+                
+                <div class="strip-display">
+                    <canvas id="strip-canvas"></canvas>
+                </div>
+                
+                <div class="tag-me">
+                    <p>tag<br>me!</p>
+                    <a href="https://github.com/Shashwat-09" class="social-icon github-icon" target="_blank">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </a>
+                    <a href="https://instagram.com" class="social-icon insta-icon" target="_blank">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1"/></svg>
+                    </a>
+                </div>
+                
+                <div class="scissors">
+                    <svg viewBox="0 0 100 60" class="scissors-svg">
+                        <circle cx="15" cy="15" r="12" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="15" cy="45" r="12" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <line x1="25" y1="20" x2="90" y2="30" stroke="currentColor" stroke-width="2"/>
+                        <line x1="25" y1="40" x2="90" y2="30" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                </div>
+            </div>
+            
+            <div class="result-actions">
+                <button class="action-btn" onclick="downloadStrip()">
+                    <span class="btn-icon">↓</span> download
+                </button>
+                <button class="action-btn" onclick="shareStrip()">
+                    <span class="btn-icon">⤴</span> share
+                </button>
+                <button class="action-btn" onclick="window.print()">
+                    <span class="btn-icon">⎙</span> print
+                </button>
+                <button class="action-btn" onclick="restart()">
+                    <span class="btn-icon">↺</span> restart
+                </button>
+            </div>
+        </section>
+
     </div>
 
     <script src="app.js"></script>
 </body>
 </html>
-
