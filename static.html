@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Photobooth</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Film grain overlay -->
+    <div class="film-grain"></div>
+    
+    <div class="container">
+        <header>
+            <h1>Retro Photobooth</h1>
+            <p class="tagline">Capture memories in vintage style</p>
+        </header>
+
+        <main>
+            <!-- Photobooth Machine -->
+            <div class="photobooth-machine">
+                <!-- Camera Section -->
+                <div class="camera-section">
+                    <div class="vintage-frame">
+                        <div class="screen-bezel">
+                            <video id="webcam" autoplay playsinline></video>
+                            <canvas id="preview-canvas" class="hidden"></canvas>
+                            <div id="countdown" class="countdown hidden"></div>
+                            <div id="flash" class="flash"></div>
+                        </div>
+                        <div class="screen-label">LIVE PREVIEW</div>
+                    </div>
+                    
+                    <!-- Controls -->
+                    <div class="controls">
+                        <button id="start-btn" class="btn btn-primary">
+                            <span class="btn-icon">⏻</span> Start Camera
+                        </button>
+                        <button id="capture-btn" class="btn btn-capture hidden">
+                            <span class="btn-icon">📷</span> Take Photos
+                        </button>
+                    </div>
+                    
+                    <div id="status" class="status-message"></div>
+                </div>
+
+                <!-- Photo Strip Section -->
+                <div class="strip-section">
+                    <div class="strip-holder">
+                        <div class="strip-slot">
+                            <canvas id="strip-canvas" class="photo-strip hidden"></canvas>
+                            <div id="strip-placeholder" class="strip-placeholder">
+                                <div class="placeholder-icon">🎞️</div>
+                                <p>Your photo strip<br>will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Strip Controls -->
+                    <div class="strip-controls hidden" id="strip-controls">
+                        <button id="retake-btn" class="btn btn-secondary">
+                            <span class="btn-icon">↺</span> Retake
+                        </button>
+                        <button id="download-btn" class="btn btn-primary">
+                            <span class="btn-icon">⬇</span> Download
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Insert coin & smile! ✨</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
