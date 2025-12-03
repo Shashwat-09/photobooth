@@ -279,12 +279,13 @@ async function startCapture() {
         // Show printing page
         navigateTo('printing-page');
         
+        // Start print countdown animation
+        await startPrintCountdown();
+        
         // Generate strip
-        await delay(500);
         generatePhotoStrip();
         
         // Show result
-        await delay(2500);
         navigateTo('result-page');
     }
 }
@@ -335,6 +336,26 @@ function triggerFlash() {
     setTimeout(() => {
         flashOverlay.classList.remove('active');
     }, 400);
+}
+
+// Print page countdown
+async function startPrintCountdown() {
+    const printCountdown = document.getElementById('print-countdown');
+    if (!printCountdown) {
+        await delay(3000);
+        return;
+    }
+    
+    for (let i = 3; i >= 1; i--) {
+        printCountdown.textContent = i;
+        printCountdown.style.animation = 'none';
+        void printCountdown.offsetWidth;
+        printCountdown.style.animation = 'countdownPop 0.9s ease-out';
+        await delay(1000);
+    }
+    
+    printCountdown.textContent = '0';
+    await delay(500);
 }
 
 // Generate Photo Strip
