@@ -26,6 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
     photoCounter = document.getElementById('photo-counter');
     currentFilterDisplay = document.getElementById('current-filter-display');
     
+    // Initialize enter button
+    const enterBtn = document.getElementById('enter-btn');
+    if (enterBtn) {
+        enterBtn.addEventListener('click', () => {
+            navigateTo('select-page');
+        });
+    }
+    
     // Initialize audio context on first user interaction
     document.addEventListener('click', initAudio, { once: true });
 });
@@ -101,6 +109,9 @@ function navigateTo(pageId) {
         targetPage.classList.add('active');
     }
 }
+
+// Expose navigateTo globally for inline onclick handlers
+window.navigateTo = navigateTo;
 
 // Stop camera and go back
 function stopAndGoBack() {
