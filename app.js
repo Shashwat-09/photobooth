@@ -1,5 +1,5 @@
 /* =============================================
-   RETRO PHOTOBOOTH - Main Application Logic
+   RETRO PHOTOBOOTH - High Quality Polaroid Style
    ============================================= */
 
 class RetroPhotobooth {
@@ -26,12 +26,18 @@ class RetroPhotobooth {
         this.photosToCapture = 4;
         this.countdownSeconds = 3;
 
-        // Photo strip dimensions
-        this.photoWidth = 180;
-        this.photoHeight = 135;
-        this.stripPadding = 15;
-        this.photoBorder = 8;
-        this.photoGap = 10;
+        // HIGH QUALITY Polaroid dimensions (scaled up for print quality)
+        // Classic Polaroid aspect ratio: square photo with larger bottom border
+        this.photoSize = 400;           // Square photo size (high res)
+        this.borderTop = 25;            // Top border
+        this.borderSide = 25;           // Side borders
+        this.borderBottom = 80;         // Larger bottom border (classic Polaroid look)
+        this.stripPadding = 30;         // Padding around the strip
+        this.photoGap = 20;             // Gap between polaroids
+
+        // Calculate polaroid frame dimensions
+        this.polaroidWidth = this.photoSize + (this.borderSide * 2);
+        this.polaroidHeight = this.photoSize + this.borderTop + this.borderBottom;
 
         // Bind methods
         this.init();
@@ -46,14 +52,18 @@ class RetroPhotobooth {
 
     async startCamera() {
         try {
-            this.setStatus('Requesting camera access...');
+            this.setStatus('Requesting camera access (high quality mode)...');
             this.startBtn.disabled = true;
 
+            // Request HIGHEST quality camera settings
             this.stream = await navigator.mediaDevices.getUserMedia({
                 video: {
-                    width: { ideal: 640 },
-                    height: { ideal: 480 },
-                    facingMode: 'user'
+                    width: { ideal: 1920, min: 1280 },
+                    height: { ideal: 1080, min: 720 },
+                    facingMode: 'user',
+                    // Request best quality settings
+                    aspectRatio: { ideal: 1.777778 },
+                    frameRate: { ideal: 30 }
                 },
                 audio: false
             });
@@ -61,9 +71,13 @@ class RetroPhotobooth {
             this.webcam.srcObject = this.stream;
             await this.webcam.play();
 
+            // Log actual resolution
+            const settings = this.stream.getVideoTracks()[0].getSettings();
+            console.log(`Camera resolution: ${settings.width}x${settings.height}`);
+
             this.startBtn.classList.add('hidden');
             this.captureBtn.classList.remove('hidden');
-            this.setStatus('Camera ready! Click "Take Photos" to begin.');
+            this.setStatus(`Camera ready! (${settings.width}x${settings.height}) Click "Take Photos" to begin.`);
 
         } catch (error) {
             console.error('Camera error:', error);
@@ -100,7 +114,7 @@ class RetroPhotobooth {
             // Countdown
             await this.showCountdown();
             
-            // Capture photo
+            // Capture photo at full resolution
             const photoData = this.captureFrame();
             this.photos.push(photoData);
             
@@ -117,7 +131,7 @@ class RetroPhotobooth {
         this.captureBtn.disabled = false;
         this.vintageFrame.classList.remove('capturing');
         
-        this.setStatus('Photos captured! Creating your strip...');
+        this.setStatus('Photos captured! Creating your Polaroid strip...');
         
         // Generate the photo strip
         await this.delay(500);
@@ -136,11 +150,19 @@ class RetroPhotobooth {
     }
 
     captureFrame() {
+        // Capture at FULL webcam resolution for highest quality
         const canvas = document.createElement('canvas');
         canvas.width = this.webcam.videoWidth;
         canvas.height = this.webcam.videoHeight;
         
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { 
+            alpha: false,
+            desynchronized: true
+        });
+        
+        // Enable high quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         
         // Mirror the image (like the preview)
         ctx.translate(canvas.width, 0);
@@ -158,132 +180,198 @@ class RetroPhotobooth {
     }
 
     generatePhotoStrip() {
-        const ctx = this.stripCanvas.getContext('2d');
+        const ctx = this.stripCanvas.getContext('2d', { alpha: false });
         
-        // Calculate strip dimensions
-        const totalPhotoHeight = this.photoHeight + (this.photoBorder * 2);
-        const stripWidth = this.photoWidth + (this.stripPadding * 2) + (this.photoBorder * 2);
-        const stripHeight = (totalPhotoHeight * this.photosToCapture) + 
+        // Enable high quality rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
+        // Calculate strip dimensions for vertical Polaroid layout
+        const stripWidth = this.polaroidWidth + (this.stripPadding * 2);
+        const stripHeight = (this.polaroidHeight * this.photosToCapture) + 
                            (this.photoGap * (this.photosToCapture - 1)) + 
-                           (this.stripPadding * 2) + 40; // Extra space for date
+                           (this.stripPadding * 2);
 
         this.stripCanvas.width = stripWidth;
         this.stripCanvas.height = stripHeight;
 
-        // Fill with off-white background (like real photo paper)
-        ctx.fillStyle = '#FEFCF9';
+        // Fill with cream/off-white background
+        ctx.fillStyle = '#FAF8F5';
         ctx.fillRect(0, 0, stripWidth, stripHeight);
 
-        // Add subtle paper texture
-        this.addPaperTexture(ctx, stripWidth, stripHeight);
-
-        // Draw each photo
+        // Draw each Polaroid
         this.photos.forEach((photoCanvas, index) => {
             const x = this.stripPadding;
-            const y = this.stripPadding + (index * (totalPhotoHeight + this.photoGap));
+            const y = this.stripPadding + (index * (this.polaroidHeight + this.photoGap));
             
-            // Draw white border
-            ctx.fillStyle = '#FFFFFF';
-            ctx.fillRect(x, y, this.photoWidth + (this.photoBorder * 2), totalPhotoHeight);
-            
-            // Draw photo with vintage effect
-            this.drawVintagePhoto(ctx, photoCanvas, x + this.photoBorder, y + this.photoBorder);
+            this.drawPolaroid(ctx, photoCanvas, x, y, index);
         });
-
-        // Add date stamp
-        this.addDateStamp(ctx, stripWidth, stripHeight);
 
         // Show the strip
         this.stripCanvas.classList.remove('hidden');
         this.stripPlaceholder.classList.add('hidden');
         this.stripControls.classList.remove('hidden');
         
-        this.setStatus('Your photo strip is ready!');
+        this.setStatus('Your Polaroid strip is ready! ✨');
     }
 
-    drawVintagePhoto(ctx, sourceCanvas, x, y) {
-        // Create temporary canvas for effects
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = this.photoWidth;
-        tempCanvas.height = this.photoHeight;
-        const tempCtx = tempCanvas.getContext('2d');
+    drawPolaroid(ctx, sourceCanvas, x, y, index) {
+        // Draw Polaroid frame with subtle shadow
+        ctx.save();
+        
+        // Slight random rotation for aesthetic (-2 to 2 degrees)
+        const rotation = (Math.random() - 0.5) * 4 * (Math.PI / 180);
+        const centerX = x + this.polaroidWidth / 2;
+        const centerY = y + this.polaroidHeight / 2;
+        
+        ctx.translate(centerX, centerY);
+        ctx.rotate(rotation);
+        ctx.translate(-centerX, -centerY);
+        
+        // Drop shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.15)';
+        ctx.shadowBlur = 15;
+        ctx.shadowOffsetX = 3;
+        ctx.shadowOffsetY = 5;
+        
+        // Polaroid white frame
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(x, y, this.polaroidWidth, this.polaroidHeight);
+        
+        // Reset shadow for photo
+        ctx.shadowColor = 'transparent';
+        
+        // Draw the photo (square crop from center)
+        this.drawCroppedPhoto(ctx, sourceCanvas, x + this.borderSide, y + this.borderTop);
+        
+        // Add subtle Polaroid texture overlay
+        this.addPolaroidTexture(ctx, x, y);
+        
+        // Add date stamp on bottom border
+        this.addPolaroidDate(ctx, x, y, index);
+        
+        ctx.restore();
+    }
 
-        // Draw scaled photo
+    drawCroppedPhoto(ctx, sourceCanvas, x, y) {
+        // Create high-quality square crop from center of the source
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = this.photoSize;
+        tempCanvas.height = this.photoSize;
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        tempCtx.imageSmoothingEnabled = true;
+        tempCtx.imageSmoothingQuality = 'high';
+
+        // Calculate square crop from center
+        const srcWidth = sourceCanvas.width;
+        const srcHeight = sourceCanvas.height;
+        const cropSize = Math.min(srcWidth, srcHeight);
+        const srcX = (srcWidth - cropSize) / 2;
+        const srcY = (srcHeight - cropSize) / 2;
+
+        // Draw cropped and scaled photo
         tempCtx.drawImage(
             sourceCanvas,
-            0, 0, sourceCanvas.width, sourceCanvas.height,
-            0, 0, this.photoWidth, this.photoHeight
+            srcX, srcY, cropSize, cropSize,
+            0, 0, this.photoSize, this.photoSize
         );
 
-        // Apply vintage color effect
-        const imageData = tempCtx.getImageData(0, 0, this.photoWidth, this.photoHeight);
-        const data = imageData.data;
-
-        for (let i = 0; i < data.length; i += 4) {
-            // Slight sepia tone
-            const r = data[i];
-            const g = data[i + 1];
-            const b = data[i + 2];
-
-            data[i] = Math.min(255, r * 1.05 + 20);      // Red
-            data[i + 1] = Math.min(255, g * 1.02 + 10);  // Green
-            data[i + 2] = Math.min(255, b * 0.95);       // Blue (reduced)
-        }
-
-        tempCtx.putImageData(imageData, 0, 0);
-
-        // Add subtle vignette
-        const gradient = tempCtx.createRadialGradient(
-            this.photoWidth / 2, this.photoHeight / 2, this.photoHeight * 0.3,
-            this.photoWidth / 2, this.photoHeight / 2, this.photoHeight * 0.8
-        );
-        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.15)');
-        
-        tempCtx.fillStyle = gradient;
-        tempCtx.fillRect(0, 0, this.photoWidth, this.photoHeight);
+        // Apply subtle aesthetic color grading (Polaroid look)
+        this.applyPolaroidEffect(tempCtx);
 
         // Draw to main canvas
         ctx.drawImage(tempCanvas, x, y);
     }
 
-    addPaperTexture(ctx, width, height) {
-        // Add very subtle noise for paper texture
-        const imageData = ctx.getImageData(0, 0, width, height);
+    applyPolaroidEffect(ctx) {
+        const imageData = ctx.getImageData(0, 0, this.photoSize, this.photoSize);
         const data = imageData.data;
 
         for (let i = 0; i < data.length; i += 4) {
-            const noise = (Math.random() - 0.5) * 8;
-            data[i] = Math.max(0, Math.min(255, data[i] + noise));
-            data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
-            data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+            let r = data[i];
+            let g = data[i + 1];
+            let b = data[i + 2];
+
+            // Subtle warm Polaroid color shift
+            // Slightly lifted blacks, warm highlights, faded look
+            
+            // Lift shadows slightly
+            r = r + (255 - r) * 0.05;
+            g = g + (255 - g) * 0.03;
+            b = b + (255 - b) * 0.02;
+            
+            // Warm tone shift
+            r = Math.min(255, r * 1.02 + 5);
+            g = Math.min(255, g * 1.0 + 2);
+            b = Math.min(255, b * 0.97);
+            
+            // Slight contrast boost
+            r = ((r / 255 - 0.5) * 1.05 + 0.5) * 255;
+            g = ((g / 255 - 0.5) * 1.05 + 0.5) * 255;
+            b = ((b / 255 - 0.5) * 1.05 + 0.5) * 255;
+
+            data[i] = Math.max(0, Math.min(255, r));
+            data[i + 1] = Math.max(0, Math.min(255, g));
+            data[i + 2] = Math.max(0, Math.min(255, b));
         }
 
         ctx.putImageData(imageData, 0, 0);
+
+        // Add subtle vignette
+        const gradient = ctx.createRadialGradient(
+            this.photoSize / 2, this.photoSize / 2, this.photoSize * 0.3,
+            this.photoSize / 2, this.photoSize / 2, this.photoSize * 0.7
+        );
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.12)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, this.photoSize, this.photoSize);
     }
 
-    addDateStamp(ctx, width, height) {
-        const date = new Date();
-        const dateStr = date.toLocaleDateString('en-US', {
-            month: '2-digit',
-            day: '2-digit',
-            year: 'numeric'
-        }).replace(/\//g, ' . ');
+    addPolaroidTexture(ctx, x, y) {
+        // Add very subtle paper texture to the white frame
+        const gradient = ctx.createLinearGradient(x, y, x, y + this.polaroidHeight);
+        gradient.addColorStop(0, 'rgba(0, 0, 0, 0.01)');
+        gradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.02)');
+        gradient.addColorStop(1, 'rgba(0, 0, 0, 0.02)');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, y, this.polaroidWidth, this.polaroidHeight);
+    }
 
-        ctx.font = '12px "Courier Prime", monospace';
-        ctx.fillStyle = '#8B4513';
+    addPolaroidDate(ctx, x, y, index) {
+        const date = new Date();
+        
+        // Classic Polaroid date format
+        const dateStr = date.toLocaleDateString('en-US', {
+            month: 'short',
+            year: 'numeric'
+        }).toUpperCase();
+
+        // Position in bottom white border
+        const textX = x + this.polaroidWidth / 2;
+        const textY = y + this.borderTop + this.photoSize + (this.borderBottom * 0.6);
+
+        ctx.font = '600 14px "Courier Prime", "Courier New", monospace';
+        ctx.fillStyle = '#9B8579';
         ctx.textAlign = 'center';
-        ctx.fillText(dateStr, width / 2, height - 15);
+        ctx.textBaseline = 'middle';
+        ctx.fillText(dateStr, textX, textY);
     }
 
     downloadStrip() {
+        // Create high quality PNG download
         const link = document.createElement('a');
         const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
-        link.download = `photobooth-strip-${timestamp}.png`;
-        link.href = this.stripCanvas.toDataURL('image/png');
+        link.download = `polaroid-strip-${timestamp}.png`;
+        
+        // Export at maximum quality
+        link.href = this.stripCanvas.toDataURL('image/png', 1.0);
         link.click();
         
-        this.setStatus('Photo strip downloaded!');
+        this.setStatus('High quality Polaroid strip downloaded! 📸');
     }
 
     retake() {
@@ -323,4 +411,3 @@ window.addEventListener('beforeunload', () => {
         window.photobooth.stop();
     }
 });
-

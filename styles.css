@@ -336,11 +336,13 @@ header h1 {
     padding: 1rem;
     border-radius: 8px;
     box-shadow: var(--shadow-inset);
-    min-width: 220px;
-    min-height: 500px;
+    min-width: 280px;
+    min-height: 600px;
+    max-height: 80vh;
+    overflow-y: auto;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
 }
 
 .strip-placeholder {
@@ -363,12 +365,31 @@ header h1 {
 .photo-strip {
     border-radius: 4px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-    transform: rotate(-2deg);
+    transform: rotate(-1deg);
     transition: transform 0.3s ease;
+    max-width: 100%;
+    height: auto;
+    /* Scale down for display while keeping high quality for download */
+    width: 250px;
 }
 
 .photo-strip:hover {
     transform: rotate(0deg) scale(1.02);
+}
+
+/* Custom scrollbar for strip slot */
+.strip-slot::-webkit-scrollbar {
+    width: 6px;
+}
+
+.strip-slot::-webkit-scrollbar-track {
+    background: var(--brown-dark);
+    border-radius: 3px;
+}
+
+.strip-slot::-webkit-scrollbar-thumb {
+    background: var(--mustard);
+    border-radius: 3px;
 }
 
 /* Strip Controls */
@@ -459,8 +480,12 @@ footer {
     }
     
     .strip-slot {
-        min-width: 180px;
-        min-height: 400px;
+        min-width: 220px;
+        min-height: 450px;
+    }
+    
+    .photo-strip {
+        width: 200px;
     }
 }
 
