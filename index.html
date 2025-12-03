@@ -37,7 +37,7 @@
                         <div class="curtain">
                             <div class="curtain-lines"></div>
                         </div>
-                        <button class="enter-btn" onclick="goToPage('select-page')">
+                        <button class="enter-btn" onclick="navigateTo('select-page')">
                             enter <span class="arrow">→</span>
                         </button>
                         <div class="booth-stool"></div>
@@ -52,16 +52,59 @@
             </div>
             
             <footer class="landing-footer">
-                <a href="#">Privacy Policy</a>
-                <a href="#">FAQ</a>
-                <a href="#">About Me</a>
-                <a href="#">Contact Me</a>
+                <a href="#" onclick="navigateTo('about-page'); return false;">About Me</a>
+                <a href="#" onclick="navigateTo('contact-page'); return false;">Contact Me</a>
             </footer>
+        </section>
+
+        <!-- PAGE: About Me -->
+        <section id="about-page" class="page">
+            <button class="back-btn" onclick="navigateTo('landing-page')">← back</button>
+            <div class="info-page-content">
+                <h1 class="info-title">About Me</h1>
+                <div class="info-card">
+                    <div class="profile-doodle">
+                        <div class="profile-circle">
+                            <span>👨‍💻</span>
+                        </div>
+                    </div>
+                    <h2>Shashwat Shah</h2>
+                    <p class="info-tagline">22 year old developer & cybersecurity expert</p>
+                    <div class="info-details">
+                        <p>I'm passionate about building cool web experiences and keeping the digital world secure. This photobooth is one of my creative projects!</p>
+                    </div>
+                    <div class="social-links">
+                        <a href="https://github.com/Shashwat-09" target="_blank" class="social-link">
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                            GitHub
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE: Contact Me -->
+        <section id="contact-page" class="page">
+            <button class="back-btn" onclick="navigateTo('landing-page')">← back</button>
+            <div class="info-page-content">
+                <h1 class="info-title">Contact Me</h1>
+                <div class="info-card">
+                    <div class="contact-icon">✉️</div>
+                    <h2>Get in Touch</h2>
+                    <p class="info-tagline">I'd love to hear from you!</p>
+                    <div class="contact-details">
+                        <a href="mailto:shashwatshah03@gmail.com" class="contact-email">
+                            <span class="email-icon">📧</span>
+                            shashwatshah03@gmail.com
+                        </a>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- PAGE 2: Select Mode Page -->
         <section id="select-page" class="page">
-            <button class="back-btn" onclick="goBack('landing-page')">← back</button>
+            <button class="back-btn" onclick="navigateTo('landing-page')">← back</button>
             <div class="booth-interior">
                 <div class="screen-frame">
                     <div class="screen-screws">
@@ -71,7 +114,7 @@
                         <span class="screw"></span>
                     </div>
                     <div class="screen-inner">
-                        <button class="mode-btn" onclick="startCamera('take')">
+                        <button class="mode-btn" onclick="startCamera()">
                             take photo <span class="camera-icon">📷</span>
                         </button>
                         <button class="mode-btn" onclick="triggerUpload()">
@@ -89,46 +132,59 @@
                     <span class="pics">4pics</span>
                 </div>
                 
-                <div class="filter-toggle">
-                    <span class="filter-label" id="bw-label">b&w</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="color-toggle">
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span class="filter-label" id="color-label">color</span>
+                <!-- Filter Selection -->
+                <div class="filter-selection">
+                    <p class="filter-title">choose filter:</p>
+                    <div class="filter-options">
+                        <button class="filter-btn active" data-filter="bw" onclick="selectFilter('bw')">
+                            <span class="filter-preview bw-preview"></span>
+                            <span>B&W</span>
+                        </button>
+                        <button class="filter-btn" data-filter="color" onclick="selectFilter('color')">
+                            <span class="filter-preview color-preview"></span>
+                            <span>Color</span>
+                        </button>
+                        <button class="filter-btn" data-filter="retro" onclick="selectFilter('retro')">
+                            <span class="filter-preview retro-preview"></span>
+                            <span>Retro</span>
+                        </button>
+                        <button class="filter-btn" data-filter="polaroid" onclick="selectFilter('polaroid')">
+                            <span class="filter-preview polaroid-preview"></span>
+                            <span>Polaroid</span>
+                        </button>
+                        <button class="filter-btn" data-filter="vintage" onclick="selectFilter('vintage')">
+                            <span class="filter-preview vintage-preview"></span>
+                            <span>Vintage</span>
+                        </button>
+                        <button class="filter-btn" data-filter="noir" onclick="selectFilter('noir')">
+                            <span class="filter-preview noir-preview"></span>
+                            <span>Noir</span>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="instructions-panel">
                     <div class="instruction">
                         <span class="step-num">1</span>
-                        <p>Choose<br>black & white<br>or color<br>filters</p>
+                        <p>Choose<br>your filter<br>style</p>
                     </div>
                     <div class="instruction">
                         <span class="step-num">2</span>
-                        <p>Wait for<br>green light<br>and press<br>button<br>to start</p>
+                        <p>Click start<br>and pose for<br>4 photos</p>
                     </div>
                     <div class="instruction">
                         <span class="step-num">3</span>
-                        <p>Wait outside<br>for your photo<br>to be printed!</p>
+                        <p>Download<br>your photo<br>strip!</p>
                     </div>
-                </div>
-                
-                <div class="start-panel">
-                    <span class="start-label" id="start-label"></span>
-                    <div class="indicator-light" id="indicator-light"></div>
-                    <div class="start-button-frame">
-                        <button class="start-button" id="start-button" disabled onclick="goToPage('camera-page')"></button>
-                    </div>
-                    <div class="photo-dispenser"></div>
                 </div>
             </div>
         </section>
 
         <!-- PAGE 3: Camera/Capture Page -->
         <section id="camera-page" class="page">
-            <button class="back-btn" onclick="goBack('select-page')">← back</button>
-            <div class="booth-interior">
-                <div class="screen-frame">
+            <button class="back-btn" onclick="stopAndGoBack()">← back</button>
+            <div class="booth-interior camera-booth">
+                <div class="screen-frame large-frame">
                     <div class="screen-screws">
                         <span class="screw"></span>
                         <span class="screw"></span>
@@ -138,52 +194,19 @@
                     <div class="screen-inner camera-screen">
                         <video id="webcam" autoplay playsinline></video>
                         <div id="countdown-overlay" class="countdown-overlay hidden">
-                            <span id="countdown-number"></span>
+                            <span id="countdown-number">3</span>
                         </div>
                         <div id="flash-overlay" class="flash-overlay"></div>
                         <div class="photo-counter" id="photo-counter">0/4</div>
+                        <div class="current-filter" id="current-filter-display">B&W</div>
                     </div>
                 </div>
                 
-                <p class="eye-level">eye<br>level <span class="arrow-right">→</span></p>
-                
-                <div class="price-tag">
-                    <span class="price">$0</span>
-                    <span class="equals">=</span>
-                    <span class="pics">4pics</span>
-                </div>
-                
-                <div class="filter-toggle">
-                    <span class="filter-label">b&w</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="color-toggle-camera" onchange="syncColorToggle(this)">
-                        <span class="toggle-slider"></span>
-                    </label>
-                    <span class="filter-label">color</span>
-                </div>
-                
-                <div class="instructions-panel">
-                    <div class="instruction">
-                        <span class="step-num">1</span>
-                        <p>Choose<br>black & white<br>or color<br>filters</p>
-                    </div>
-                    <div class="instruction">
-                        <span class="step-num">2</span>
-                        <p>Wait for<br>green light<br>and press<br>button<br>to start</p>
-                    </div>
-                    <div class="instruction">
-                        <span class="step-num">3</span>
-                        <p>Wait outside<br>for your photo<br>to be printed!</p>
-                    </div>
-                </div>
-                
-                <div class="start-panel">
-                    <span class="start-label" id="camera-start-label">start</span>
-                    <div class="indicator-light green" id="camera-indicator"></div>
-                    <div class="start-button-frame">
-                        <button class="start-button" id="capture-button" onclick="startCapture()"></button>
-                    </div>
-                    <div class="photo-dispenser"></div>
+                <div class="camera-controls">
+                    <button class="capture-btn" id="capture-button" onclick="startCapture()">
+                        <span class="capture-icon">📸</span>
+                        <span>START</span>
+                    </button>
                 </div>
             </div>
         </section>
@@ -214,7 +237,7 @@
 
         <!-- PAGE 5: Result/Pickup Page -->
         <section id="result-page" class="page">
-            <button class="back-btn" onclick="goBack('landing-page')">← home</button>
+            <button class="back-btn" onclick="navigateTo('landing-page')">← home</button>
             <div class="result-container">
                 <div class="result-header">
                     <p class="your-text">your</p>
@@ -262,6 +285,11 @@
         </section>
 
     </div>
+
+    <!-- Audio for camera shutter -->
+    <audio id="shutter-sound" preload="auto">
+        <source src="data:audio/wav;base64,UklGRl9vT19telestream_base64_audioRIRk..." type="audio/wav">
+    </audio>
 
     <script src="app.js"></script>
 </body>

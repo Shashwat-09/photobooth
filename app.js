@@ -6,48 +6,163 @@
 let stream = null;
 let photos = [];
 let isCapturing = false;
-let isColorMode = false;
+let currentFilter = 'bw';
 const PHOTOS_TO_CAPTURE = 4;
 const COUNTDOWN_SECONDS = 3;
 
-// DOM Elements (will be initialized on page load)
-let webcam, stripCanvas, countdownOverlay, countdownNumber, flashOverlay, photoCounter;
+// Audio Context for shutter sound
+let audioContext = null;
+
+// DOM Elements
+let webcam, stripCanvas, countdownOverlay, countdownNumber, flashOverlay, photoCounter, currentFilterDisplay;
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
-    // Get DOM elements
     webcam = document.getElementById('webcam');
     stripCanvas = document.getElementById('strip-canvas');
     countdownOverlay = document.getElementById('countdown-overlay');
     countdownNumber = document.getElementById('countdown-number');
     flashOverlay = document.getElementById('flash-overlay');
     photoCounter = document.getElementById('photo-counter');
+    currentFilterDisplay = document.getElementById('current-filter-display');
     
-    // Sync color toggle between pages
-    const colorToggle = document.getElementById('color-toggle');
-    const colorToggleCamera = document.getElementById('color-toggle-camera');
-    
-    if (colorToggle) {
-        colorToggle.addEventListener('change', (e) => {
-            isColorMode = e.target.checked;
-            if (colorToggleCamera) colorToggleCamera.checked = isColorMode;
-            updateWebcamFilter();
-        });
-    }
+    // Initialize audio context on first user interaction
+    document.addEventListener('click', initAudio, { once: true });
 });
 
+// Initialize Audio Context
+function initAudio() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+        console.log('Audio not supported');
+    }
+}
+
+// Play shutter sound
+function playShutterSound() {
+    if (!audioContext) return;
+    
+    try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        // Camera shutter-like sound
+        oscillator.type = 'square';
+        oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(200, audioContext.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.1);
+    } catch (e) {
+        console.log('Error playing sound:', e);
+    }
+}
+
+// Play countdown beep
+function playBeep() {
+    if (!audioContext) return;
+    
+    try {
+        const oscillator = audioContext.createOscillator();
+        const gainNode = audioContext.createGain();
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioContext.destination);
+        
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+        
+        gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.15);
+        
+        oscillator.start(audioContext.currentTime);
+        oscillator.stop(audioContext.currentTime + 0.15);
+    } catch (e) {
+        console.log('Error playing beep:', e);
+    }
+}
+
 // Page Navigation
-function goToPage(pageId) {
+function navigateTo(pageId) {
+    // Hide all pages
     document.querySelectorAll('.page').forEach(page => {
         page.classList.remove('active');
     });
-    document.getElementById(pageId).classList.add('active');
+    // Show target page
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
+}
+
+// Stop camera and go back
+function stopAndGoBack() {
+    // Stop camera stream
+    if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+    }
+    
+    // Reset state
+    isCapturing = false;
+    photos = [];
+    
+    // Reset UI
+    if (photoCounter) photoCounter.textContent = '0/4';
+    if (countdownOverlay) countdownOverlay.classList.add('hidden');
+    
+    // Go back to select page
+    navigateTo('select-page');
+}
+
+// Filter Selection
+function selectFilter(filter) {
+    currentFilter = filter;
+    
+    // Update active button
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-filter="${filter}"]`)?.classList.add('active');
+    
+    // Update webcam preview filter if camera is active
+    updateWebcamFilter();
+    
+    // Update filter display
+    const filterNames = {
+        'bw': 'B&W',
+        'color': 'Color',
+        'retro': 'Retro',
+        'polaroid': 'Polaroid',
+        'vintage': 'Vintage',
+        'noir': 'Noir'
+    };
+    if (currentFilterDisplay) {
+        currentFilterDisplay.textContent = filterNames[filter] || filter;
+    }
+}
+
+// Update webcam filter
+function updateWebcamFilter() {
+    if (!webcam) return;
+    
+    // Remove all filter classes
+    webcam.classList.remove('filter-bw', 'filter-color', 'filter-retro', 'filter-polaroid', 'filter-vintage', 'filter-noir');
+    
+    // Add current filter class
+    webcam.classList.add(`filter-${currentFilter}`);
 }
 
 // Start Camera
-async function startCamera(mode) {
+async function startCamera() {
     try {
-        // Request high quality camera
         stream = await navigator.mediaDevices.getUserMedia({
             video: {
                 width: { ideal: 1920, min: 1280 },
@@ -60,50 +175,29 @@ async function startCamera(mode) {
         webcam.srcObject = stream;
         await webcam.play();
         
-        // Update indicator lights
-        const indicator = document.getElementById('indicator-light');
-        const startBtn = document.getElementById('start-button');
-        const startLabel = document.getElementById('start-label');
-        
-        if (indicator) {
-            indicator.classList.add('green');
-        }
-        if (startBtn) {
-            startBtn.disabled = false;
-        }
-        if (startLabel) {
-            startLabel.textContent = 'start';
-        }
-        
-        // Update webcam filter based on color mode
+        // Apply current filter
         updateWebcamFilter();
         
+        // Update filter display
+        const filterNames = {
+            'bw': 'B&W',
+            'color': 'Color',
+            'retro': 'Retro',
+            'polaroid': 'Polaroid',
+            'vintage': 'Vintage',
+            'noir': 'Noir'
+        };
+        if (currentFilterDisplay) {
+            currentFilterDisplay.textContent = filterNames[currentFilter];
+        }
+        
         // Navigate to camera page
-        goToPage('camera-page');
+        navigateTo('camera-page');
         
     } catch (error) {
         console.error('Camera error:', error);
         alert('Could not access camera. Please allow camera permissions and try again.');
     }
-}
-
-// Update webcam filter (B&W or Color)
-function updateWebcamFilter() {
-    if (webcam) {
-        if (isColorMode) {
-            webcam.classList.remove('bw-filter');
-        } else {
-            webcam.classList.add('bw-filter');
-        }
-    }
-}
-
-// Sync color toggle between pages
-function syncColorToggle(checkbox) {
-    isColorMode = checkbox.checked;
-    const colorToggle = document.getElementById('color-toggle');
-    if (colorToggle) colorToggle.checked = isColorMode;
-    updateWebcamFilter();
 }
 
 // Handle photo upload
@@ -118,20 +212,17 @@ async function handleUpload(event) {
     photos = [];
     const filesToProcess = files.slice(0, 4);
     
-    // Load images
     for (const file of filesToProcess) {
         const img = await loadImage(file);
         photos.push(img);
     }
     
-    // Fill remaining with duplicates if less than 4
     while (photos.length < 4) {
         photos.push(photos[photos.length - 1]);
     }
     
-    // Generate strip and show result
     generatePhotoStrip();
-    goToPage('result-page');
+    navigateTo('result-page');
 }
 
 function loadImage(file) {
@@ -150,24 +241,30 @@ async function startCapture() {
     photos = [];
     
     const captureBtn = document.getElementById('capture-button');
-    captureBtn.disabled = true;
+    if (captureBtn) captureBtn.disabled = true;
+    if (photoCounter) photoCounter.textContent = '0/4';
     
     for (let i = 0; i < PHOTOS_TO_CAPTURE; i++) {
+        if (!isCapturing) break;
+        
         // Update counter
-        photoCounter.textContent = `${i}/${PHOTOS_TO_CAPTURE}`;
+        if (photoCounter) photoCounter.textContent = `${i}/${PHOTOS_TO_CAPTURE}`;
         
         // Show countdown
         await showCountdown();
+        
+        if (!isCapturing) break;
         
         // Capture photo
         const photo = captureFrame();
         photos.push(photo);
         
-        // Flash effect
+        // Play shutter sound and flash
+        playShutterSound();
         triggerFlash();
         
-        // Update counter after capture
-        photoCounter.textContent = `${i + 1}/${PHOTOS_TO_CAPTURE}`;
+        // Update counter
+        if (photoCounter) photoCounter.textContent = `${i + 1}/${PHOTOS_TO_CAPTURE}`;
         
         // Delay between photos
         if (i < PHOTOS_TO_CAPTURE - 1) {
@@ -176,36 +273,45 @@ async function startCapture() {
     }
     
     isCapturing = false;
-    captureBtn.disabled = false;
+    if (captureBtn) captureBtn.disabled = false;
     
-    // Show printing page
-    goToPage('printing-page');
-    
-    // Generate strip while showing printing animation
-    await delay(500);
-    generatePhotoStrip();
-    
-    // Wait and show result
-    await delay(2500);
-    goToPage('result-page');
+    if (photos.length === PHOTOS_TO_CAPTURE) {
+        // Show printing page
+        navigateTo('printing-page');
+        
+        // Generate strip
+        await delay(500);
+        generatePhotoStrip();
+        
+        // Show result
+        await delay(2500);
+        navigateTo('result-page');
+    }
 }
 
 // Countdown
 async function showCountdown() {
+    if (!countdownOverlay || !countdownNumber) return;
+    
     countdownOverlay.classList.remove('hidden');
     
     for (let i = COUNTDOWN_SECONDS; i > 0; i--) {
+        // Play beep sound
+        playBeep();
+        
+        // Update number with animation
         countdownNumber.textContent = i;
         countdownNumber.style.animation = 'none';
-        countdownNumber.offsetHeight; // Trigger reflow
-        countdownNumber.style.animation = 'pulse 1s ease-out';
+        void countdownNumber.offsetWidth; // Force reflow
+        countdownNumber.style.animation = 'countdownPop 0.9s ease-out';
+        
         await delay(1000);
     }
     
     countdownOverlay.classList.add('hidden');
 }
 
-// Capture frame from webcam
+// Capture frame
 function captureFrame() {
     const canvas = document.createElement('canvas');
     canvas.width = webcam.videoWidth;
@@ -213,7 +319,7 @@ function captureFrame() {
     
     const ctx = canvas.getContext('2d');
     
-    // Mirror the image
+    // Mirror
     ctx.translate(canvas.width, 0);
     ctx.scale(-1, 1);
     ctx.drawImage(webcam, 0, 0);
@@ -223,17 +329,20 @@ function captureFrame() {
 
 // Flash effect
 function triggerFlash() {
+    if (!flashOverlay) return;
+    
     flashOverlay.classList.add('active');
     setTimeout(() => {
         flashOverlay.classList.remove('active');
-    }, 300);
+    }, 400);
 }
 
 // Generate Photo Strip
 function generatePhotoStrip() {
+    if (!stripCanvas) return;
+    
     const ctx = stripCanvas.getContext('2d');
     
-    // Strip dimensions (classic photo booth strip)
     const photoWidth = 300;
     const photoHeight = 225;
     const borderWidth = 15;
@@ -249,7 +358,7 @@ function generatePhotoStrip() {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, stripWidth, stripHeight);
     
-    // Draw border
+    // Border
     ctx.strokeStyle = '#000000';
     ctx.lineWidth = 3;
     ctx.strokeRect(1.5, 1.5, stripWidth - 3, stripHeight - 3);
@@ -259,23 +368,22 @@ function generatePhotoStrip() {
         const x = borderWidth;
         const y = borderWidth + (index * (photoHeight + gapBetween));
         
-        // Draw photo frame
+        // Photo frame
         ctx.fillStyle = '#000000';
         ctx.fillRect(x - 2, y - 2, photoWidth + 4, photoHeight + 4);
         
-        // Draw photo
+        // Photo
         drawPhoto(ctx, photo, x, y, photoWidth, photoHeight);
     });
 }
 
 function drawPhoto(ctx, source, x, y, width, height) {
-    // Create temp canvas for processing
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = width;
     tempCanvas.height = height;
     const tempCtx = tempCanvas.getContext('2d');
     
-    // Calculate crop for center-fitted image
+    // Calculate crop
     const sourceWidth = source.width || source.videoWidth;
     const sourceHeight = source.height || source.videoHeight;
     
@@ -293,43 +401,81 @@ function drawPhoto(ctx, source, x, y, width, height) {
     }
     
     // Draw cropped image
-    tempCtx.drawImage(
-        source,
-        cropX, cropY, cropWidth, cropHeight,
-        0, 0, width, height
-    );
+    tempCtx.drawImage(source, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height);
     
-    // Apply B&W if needed
-    if (!isColorMode) {
-        applyBWFilter(tempCtx, width, height);
-    }
+    // Apply filter
+    applyFilter(tempCtx, width, height, currentFilter);
     
-    // Draw to main canvas
     ctx.drawImage(tempCanvas, x, y);
 }
 
-function applyBWFilter(ctx, width, height) {
+function applyFilter(ctx, width, height, filter) {
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
     
     for (let i = 0; i < data.length; i += 4) {
-        // Luminance formula
-        const gray = data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114;
+        let r = data[i];
+        let g = data[i + 1];
+        let b = data[i + 2];
         
-        // Slight contrast boost for B&W
-        const adjusted = ((gray / 255 - 0.5) * 1.1 + 0.5) * 255;
-        const final = Math.max(0, Math.min(255, adjusted));
+        switch (filter) {
+            case 'bw':
+                // Black & White with contrast
+                const gray = r * 0.299 + g * 0.587 + b * 0.114;
+                const adjusted = ((gray / 255 - 0.5) * 1.1 + 0.5) * 255;
+                r = g = b = Math.max(0, Math.min(255, adjusted));
+                break;
+                
+            case 'color':
+                // No change
+                break;
+                
+            case 'retro':
+                // Warm sepia with saturation
+                r = Math.min(255, r * 1.1 + 30);
+                g = Math.min(255, g * 1.0 + 15);
+                b = Math.min(255, b * 0.8);
+                break;
+                
+            case 'polaroid':
+                // Soft, slightly faded with warm tint
+                r = Math.min(255, r * 1.05 + 15);
+                g = Math.min(255, g * 1.02 + 10);
+                b = Math.min(255, b * 0.95 + 5);
+                // Reduce contrast slightly
+                r = ((r / 255 - 0.5) * 0.9 + 0.5) * 255 + 10;
+                g = ((g / 255 - 0.5) * 0.9 + 0.5) * 255 + 5;
+                b = ((b / 255 - 0.5) * 0.9 + 0.5) * 255;
+                break;
+                
+            case 'vintage':
+                // Brown/sepia tones with fade
+                const vintageGray = r * 0.3 + g * 0.59 + b * 0.11;
+                r = Math.min(255, vintageGray * 1.2 + 40);
+                g = Math.min(255, vintageGray * 1.0 + 20);
+                b = Math.min(255, vintageGray * 0.8);
+                break;
+                
+            case 'noir':
+                // High contrast B&W
+                const noirGray = r * 0.299 + g * 0.587 + b * 0.114;
+                const noirAdjusted = ((noirGray / 255 - 0.5) * 1.5 + 0.5) * 255;
+                r = g = b = Math.max(0, Math.min(255, noirAdjusted * 0.9));
+                break;
+        }
         
-        data[i] = final;
-        data[i + 1] = final;
-        data[i + 2] = final;
+        data[i] = Math.max(0, Math.min(255, r));
+        data[i + 1] = Math.max(0, Math.min(255, g));
+        data[i + 2] = Math.max(0, Math.min(255, b));
     }
     
     ctx.putImageData(imageData, 0, 0);
 }
 
-// Download strip
+// Download
 function downloadStrip() {
+    if (!stripCanvas) return;
+    
     const link = document.createElement('a');
     const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
     link.download = `photostrip-${timestamp}.png`;
@@ -337,25 +483,19 @@ function downloadStrip() {
     link.click();
 }
 
-// Share strip
+// Share
 async function shareStrip() {
+    if (!stripCanvas) return;
+    
     if (navigator.share) {
         try {
             const blob = await new Promise(resolve => stripCanvas.toBlob(resolve, 'image/png'));
             const file = new File([blob], 'photostrip.png', { type: 'image/png' });
-            
-            await navigator.share({
-                files: [file],
-                title: 'My Photo Strip',
-                text: 'Check out my photo strip!'
-            });
+            await navigator.share({ files: [file], title: 'My Photo Strip' });
         } catch (error) {
-            console.log('Share failed:', error);
-            // Fallback to download
             downloadStrip();
         }
     } else {
-        // Fallback to download
         downloadStrip();
     }
 }
@@ -367,8 +507,10 @@ function restart() {
         stream.getTracks().forEach(track => track.stop());
         stream = null;
     }
-    photoCounter.textContent = '0/4';
-    goToPage('landing-page');
+    if (photoCounter) photoCounter.textContent = '0/4';
+    currentFilter = 'bw';
+    selectFilter('bw');
+    navigateTo('landing-page');
 }
 
 // Utility
@@ -376,7 +518,7 @@ function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// Cleanup on page unload
+// Cleanup
 window.addEventListener('beforeunload', () => {
     if (stream) {
         stream.getTracks().forEach(track => track.stop());

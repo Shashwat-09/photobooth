@@ -43,46 +43,39 @@ body {
     width: 100%;
     animation: fadeIn 0.3s ease;
     position: relative;
+    min-height: 80vh;
 }
 
 .page.active {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Back Button */
 .back-btn {
-    position: absolute;
+    position: fixed;
     top: 20px;
     left: 20px;
-    background: none;
+    background: var(--white);
     border: 2px solid var(--black);
-    padding: 8px 16px;
+    padding: 10px 20px;
     font-family: 'Caveat', cursive;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     cursor: pointer;
     transition: all 0.2s;
-    z-index: 100;
+    z-index: 1000;
 }
 
 .back-btn:hover {
     background: var(--black);
     color: var(--white);
-}
-
-/* ============================================
-   SKETCH BORDERS - Hand-drawn effect
-   ============================================ */
-
-.sketch-border {
-    border: var(--sketch-width) solid var(--black);
-    border-radius: 3px;
 }
 
 /* ============================================
@@ -314,11 +307,127 @@ body {
 .landing-footer a {
     color: var(--gray);
     text-decoration: none;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
+    padding: 8px 15px;
+    border: 2px solid transparent;
+    transition: all 0.2s;
 }
 
 .landing-footer a:hover {
-    text-decoration: underline;
+    border-color: var(--black);
+}
+
+/* ============================================
+   ABOUT & CONTACT PAGES
+   ============================================ */
+
+.info-page-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.info-title {
+    font-family: 'Architects Daughter', cursive;
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+}
+
+.info-card {
+    border: 3px solid var(--black);
+    padding: 40px;
+    max-width: 400px;
+    text-align: center;
+    background: var(--white);
+}
+
+.profile-doodle {
+    margin-bottom: 20px;
+}
+
+.profile-circle {
+    width: 80px;
+    height: 80px;
+    border: 3px solid var(--black);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 2.5rem;
+}
+
+.info-card h2 {
+    font-family: 'Architects Daughter', cursive;
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.info-tagline {
+    font-size: 1.3rem;
+    color: var(--gray);
+    margin-bottom: 20px;
+}
+
+.info-details {
+    font-size: 1.2rem;
+    line-height: 1.5;
+    margin-bottom: 25px;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+}
+
+.social-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--black);
+    text-decoration: none;
+    border: 2px solid var(--black);
+    padding: 10px 20px;
+    font-size: 1.1rem;
+    transition: all 0.2s;
+}
+
+.social-link:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+.social-link svg {
+    width: 20px;
+    height: 20px;
+}
+
+.contact-icon {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.contact-email {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--black);
+    text-decoration: none;
+    border: 2px solid var(--black);
+    padding: 15px 25px;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+}
+
+.contact-email:hover {
+    background: var(--black);
+    color: var(--white);
+}
+
+.email-icon {
+    font-size: 1.5rem;
 }
 
 /* ============================================
@@ -332,6 +441,7 @@ body {
     position: relative;
     width: 100%;
     max-width: 700px;
+    padding-top: 60px;
 }
 
 .screen-frame {
@@ -340,6 +450,10 @@ body {
     background: var(--white);
     position: relative;
     margin-bottom: 20px;
+}
+
+.large-frame {
+    padding: 20px;
 }
 
 .screen-screws {
@@ -380,6 +494,8 @@ body {
     position: relative;
     overflow: hidden;
     padding: 0;
+    width: 400px;
+    height: 300px;
 }
 
 #webcam {
@@ -410,7 +526,7 @@ body {
 .eye-level {
     position: absolute;
     left: -80px;
-    top: 80px;
+    top: 120px;
     font-size: 1.4rem;
     line-height: 1.1;
     text-align: right;
@@ -424,7 +540,7 @@ body {
 .price-tag {
     position: absolute;
     right: -100px;
-    top: 60px;
+    top: 100px;
     border: 2px solid var(--black);
     border-radius: 50%;
     width: 80px;
@@ -443,55 +559,63 @@ body {
     font-weight: 600;
 }
 
-.filter-toggle {
-    display: flex;
-    align-items: center;
-    gap: 15px;
+/* Filter Selection */
+.filter-selection {
     margin: 20px 0;
+    text-align: center;
 }
 
-.filter-label {
+.filter-title {
     font-size: 1.4rem;
+    margin-bottom: 15px;
 }
 
-.toggle-switch {
-    position: relative;
-    width: 60px;
-    height: 30px;
+.filter-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
-.toggle-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.toggle-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+.filter-btn {
     border: 2px solid var(--black);
-    border-radius: 30px;
-    transition: 0.3s;
+    background: var(--white);
+    padding: 10px 15px;
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.2s;
+    min-width: 70px;
 }
 
-.toggle-slider::before {
-    position: absolute;
-    content: '';
-    height: 20px;
-    width: 20px;
-    left: 4px;
-    bottom: 3px;
+.filter-btn:hover {
+    transform: translateY(-2px);
+}
+
+.filter-btn.active {
     background: var(--black);
-    border-radius: 50%;
-    transition: 0.3s;
+    color: var(--white);
 }
 
-input:checked + .toggle-slider::before {
-    transform: translateX(28px);
+.filter-preview {
+    width: 40px;
+    height: 30px;
+    border: 1px solid var(--black);
+}
+
+.bw-preview { background: linear-gradient(45deg, #333, #999); }
+.color-preview { background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #ffe66d); }
+.retro-preview { background: linear-gradient(45deg, #d4a574, #c9956c, #b8860b); }
+.polaroid-preview { background: linear-gradient(45deg, #f5e6d3, #e8d4c4, #daa520); }
+.vintage-preview { background: linear-gradient(45deg, #704214, #a0522d, #cd853f); }
+.noir-preview { background: linear-gradient(45deg, #000, #333, #666); }
+
+.filter-btn.active .filter-preview {
+    border-color: var(--white);
 }
 
 .instructions-panel {
@@ -521,60 +645,41 @@ input:checked + .toggle-slider::before {
     line-height: 1.2;
 }
 
-.start-panel {
-    position: absolute;
-    right: -140px;
-    top: 200px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 5px;
+/* Camera Controls */
+.camera-booth {
+    padding-top: 80px;
 }
 
-.start-label {
-    font-size: 1.3rem;
+.camera-controls {
+    margin-top: 20px;
 }
 
-.indicator-light {
-    width: 25px;
-    height: 25px;
-    border: 2px solid var(--black);
-    border-radius: 50%;
-    background: #ff4444;
-}
-
-.indicator-light.green {
-    background: #44cc44;
-}
-
-.start-button-frame {
-    border: 2px solid var(--black);
-    padding: 10px;
-    margin-top: 10px;
-}
-
-.start-button {
-    width: 50px;
-    height: 15px;
-    border: 2px solid var(--black);
-    background: var(--white);
+.capture-btn {
+    background: var(--black);
+    color: var(--white);
+    border: 3px solid var(--black);
+    padding: 15px 50px;
+    font-family: 'Architects Daughter', cursive;
+    font-size: 1.5rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
 }
 
-.start-button:hover:not(:disabled) {
-    background: var(--light-gray);
+.capture-btn:hover:not(:disabled) {
+    background: var(--white);
+    color: var(--black);
 }
 
-.start-button:disabled {
-    cursor: not-allowed;
+.capture-btn:disabled {
     opacity: 0.5;
+    cursor: not-allowed;
 }
 
-.photo-dispenser {
-    width: 50px;
-    height: 30px;
-    border: 2px solid var(--black);
-    margin-top: 10px;
+.capture-icon {
+    font-size: 1.8rem;
 }
 
 /* Countdown Overlay */
@@ -584,11 +689,12 @@ input:checked + .toggle-slider::before {
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 10;
+    transition: background 0.1s;
 }
 
 .countdown-overlay.hidden {
@@ -597,22 +703,19 @@ input:checked + .toggle-slider::before {
 
 #countdown-number {
     font-family: 'Architects Daughter', cursive;
-    font-size: 10rem;
+    font-size: 12rem;
     color: var(--white);
-    text-shadow: 0 0 30px rgba(255,255,255,0.5);
+    text-shadow: 0 0 50px rgba(255,255,255,0.8);
+    animation: countdownPop 0.9s ease-out;
 }
 
-#countdown-number.countdown-animate {
-    animation: pulse 0.9s ease-out forwards;
-}
-
-@keyframes pulse {
+@keyframes countdownPop {
     0% { 
-        transform: scale(0.3); 
+        transform: scale(0.2); 
         opacity: 0; 
     }
-    40% { 
-        transform: scale(1.3); 
+    50% { 
+        transform: scale(1.4); 
         opacity: 1;
     }
     100% { 
@@ -634,7 +737,7 @@ input:checked + .toggle-slider::before {
 }
 
 .flash-overlay.active {
-    animation: flash 0.3s ease-out;
+    animation: flash 0.4s ease-out;
 }
 
 @keyframes flash {
@@ -648,16 +751,31 @@ input:checked + .toggle-slider::before {
     right: 10px;
     background: var(--black);
     color: var(--white);
-    padding: 5px 12px;
+    padding: 8px 15px;
     font-family: 'Architects Daughter', cursive;
-    font-size: 1.1rem;
+    font-size: 1.3rem;
     border-radius: 3px;
 }
 
-/* B&W Filter */
-.bw-filter {
-    filter: grayscale(100%) contrast(1.1);
+.current-filter {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--white);
+    color: var(--black);
+    padding: 5px 12px;
+    font-family: 'Caveat', cursive;
+    font-size: 1.1rem;
+    border: 2px solid var(--black);
 }
+
+/* Webcam Filters */
+.filter-bw { filter: grayscale(100%) contrast(1.1); }
+.filter-color { filter: none; }
+.filter-retro { filter: sepia(60%) saturate(1.4) contrast(1.1); }
+.filter-polaroid { filter: sepia(30%) saturate(1.2) brightness(1.1) contrast(0.9); }
+.filter-vintage { filter: sepia(40%) hue-rotate(-10deg) saturate(1.5) contrast(0.9); }
+.filter-noir { filter: grayscale(100%) contrast(1.4) brightness(0.9); }
 
 /* ============================================
    PRINTING PAGE
@@ -746,12 +864,13 @@ input:checked + .toggle-slider::before {
     align-items: center;
     position: relative;
     width: 100%;
+    padding-top: 60px;
 }
 
 .result-header {
     position: absolute;
-    right: calc(50% - 200px);
-    top: 0;
+    right: calc(50% - 220px);
+    top: 80px;
     text-align: left;
 }
 
@@ -776,8 +895,8 @@ input:checked + .toggle-slider::before {
 
 .tag-me {
     position: absolute;
-    left: calc(50% - 200px);
-    top: 150px;
+    left: calc(50% - 220px);
+    top: 180px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -799,8 +918,8 @@ input:checked + .toggle-slider::before {
 
 .scissors {
     position: absolute;
-    right: calc(50% - 180px);
-    bottom: 100px;
+    right: calc(50% - 200px);
+    bottom: 120px;
 }
 
 .scissors-svg {
@@ -845,14 +964,12 @@ input:checked + .toggle-slider::before {
 
 @media (max-width: 800px) {
     .eye-level,
-    .price-tag,
-    .start-panel {
-        position: static;
-        margin: 15px 0;
+    .price-tag {
+        display: none;
     }
     
     .booth-interior {
-        padding: 20px;
+        padding: 80px 20px 20px;
     }
     
     .instructions-panel {
@@ -868,12 +985,6 @@ input:checked + .toggle-slider::before {
         border-bottom: none;
     }
     
-    .start-panel {
-        flex-direction: row;
-        align-items: center;
-        gap: 20px;
-    }
-    
     .result-header,
     .tag-me,
     .scissors {
@@ -887,6 +998,11 @@ input:checked + .toggle-slider::before {
     
     .tag-me {
         flex-direction: row;
+    }
+    
+    .camera-screen {
+        width: 320px;
+        height: 240px;
     }
 }
 
@@ -922,6 +1038,25 @@ input:checked + .toggle-slider::before {
         width: 250px;
         height: 200px;
     }
+    
+    .filter-options {
+        gap: 8px;
+    }
+    
+    .filter-btn {
+        padding: 8px 10px;
+        min-width: 60px;
+        font-size: 1rem;
+    }
+    
+    .filter-preview {
+        width: 30px;
+        height: 22px;
+    }
+    
+    #countdown-number {
+        font-size: 8rem;
+    }
 }
 
 /* Print Styles */
@@ -933,7 +1068,8 @@ input:checked + .toggle-slider::before {
     .result-actions,
     .tag-me,
     .scissors,
-    .result-header {
+    .result-header,
+    .back-btn {
         display: none;
     }
     
