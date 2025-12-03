@@ -16,6 +16,22 @@ let audioContext = null;
 // DOM Elements
 let webcam, stripCanvas, countdownOverlay, countdownNumber, flashOverlay, photoCounter, currentFilterDisplay;
 
+// Page Navigation - Define early so it's available for inline onclick
+function navigateTo(pageId) {
+    // Hide all pages
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+    // Show target page
+    const targetPage = document.getElementById(pageId);
+    if (targetPage) {
+        targetPage.classList.add('active');
+    }
+}
+
+// Expose navigateTo globally immediately
+window.navigateTo = navigateTo;
+
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
     webcam = document.getElementById('webcam');
@@ -25,14 +41,6 @@ document.addEventListener('DOMContentLoaded', () => {
     flashOverlay = document.getElementById('flash-overlay');
     photoCounter = document.getElementById('photo-counter');
     currentFilterDisplay = document.getElementById('current-filter-display');
-    
-    // Initialize enter button
-    const enterBtn = document.getElementById('enter-btn');
-    if (enterBtn) {
-        enterBtn.addEventListener('click', () => {
-            navigateTo('select-page');
-        });
-    }
     
     // Initialize audio context on first user interaction
     document.addEventListener('click', initAudio, { once: true });
@@ -96,22 +104,6 @@ function playBeep() {
         console.log('Error playing beep:', e);
     }
 }
-
-// Page Navigation
-function navigateTo(pageId) {
-    // Hide all pages
-    document.querySelectorAll('.page').forEach(page => {
-        page.classList.remove('active');
-    });
-    // Show target page
-    const targetPage = document.getElementById(pageId);
-    if (targetPage) {
-        targetPage.classList.add('active');
-    }
-}
-
-// Expose navigateTo globally for inline onclick handlers
-window.navigateTo = navigateTo;
 
 // Stop camera and go back
 function stopAndGoBack() {
@@ -759,6 +751,17 @@ function restart() {
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+// Expose all functions globally for inline onclick handlers
+window.navigateTo = navigateTo;
+window.startCamera = startCamera;
+window.triggerUpload = triggerUpload;
+window.selectFilter = selectFilter;
+window.stopAndGoBack = stopAndGoBack;
+window.startCapture = startCapture;
+window.downloadStrip = downloadStrip;
+window.shareStrip = shareStrip;
+window.restart = restart;
 
 // Cleanup
 window.addEventListener('beforeunload', () => {
