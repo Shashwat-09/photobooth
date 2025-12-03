@@ -37,6 +37,19 @@ window.navigateTo = navigateTo;
 
 // Initialize on load
 document.addEventListener('DOMContentLoaded', () => {
+    // Ensure landing page is visible on initial load
+    const landingPage = document.getElementById('landing-page');
+    if (landingPage) {
+        landingPage.classList.add('active');
+    }
+    
+    // Hide all other pages
+    document.querySelectorAll('.page').forEach(page => {
+        if (page.id !== 'landing-page') {
+            page.classList.remove('active');
+        }
+    });
+    
     webcam = document.getElementById('webcam');
     stripCanvas = document.getElementById('strip-canvas');
     countdownOverlay = document.getElementById('countdown-overlay');
@@ -50,27 +63,120 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize audio context on first user interaction
     document.addEventListener('click', initAudio, { once: true });
+    
+    console.log('Photobooth initialized. Landing page should be visible.');
 });
 
 // Set up all event listeners for buttons (backup if onclick doesn't work)
 function setupEventListeners() {
-    // This is a backup - onclick handlers should work, but this ensures they do
     console.log('Setting up event listeners...');
     console.log('navigateTo available:', typeof window.navigateTo);
     
-    // Enter button
+    // Enter button - add event listener as backup
     const enterBtn = document.querySelector('.enter-btn');
     if (enterBtn) {
+        console.log('Enter button found, adding event listener');
+        // Remove existing onclick to avoid double execution
+        enterBtn.removeAttribute('onclick');
         enterBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
+            console.log('Enter button clicked via event listener');
             if (typeof navigateTo === 'function') {
                 navigateTo('select-page');
             } else {
                 console.error('navigateTo not available');
             }
         });
+    } else {
+        console.error('Enter button not found!');
     }
+    
+    // Footer links - About Me and Contact Me
+    const footerLinks = document.querySelectorAll('.landing-footer a');
+    footerLinks.forEach(link => {
+        const onclick = link.getAttribute('onclick');
+        if (onclick) {
+            link.removeAttribute('onclick');
+            if (onclick.includes('about-page')) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navigateTo('about-page');
+                });
+            } else if (onclick.includes('contact-page')) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navigateTo('contact-page');
+                });
+            }
+        }
+    });
+    
+    // Back buttons
+    document.querySelectorAll('.back-btn').forEach(btn => {
+        const onclick = btn.getAttribute('onclick');
+        if (onclick) {
+            btn.removeAttribute('onclick');
+            if (onclick.includes('landing-page')) {
+                btn.addEventListener('click', () => navigateTo('landing-page'));
+            } else if (onclick.includes('select-page')) {
+                btn.addEventListener('click', () => navigateTo('select-page'));
+            } else if (onclick.includes('stopAndGoBack')) {
+                btn.addEventListener('click', stopAndGoBack);
+            }
+        }
+    });
+    
+    // Mode buttons (take photo, upload photo)
+    const modeButtons = document.querySelectorAll('.mode-btn');
+    modeButtons.forEach(btn => {
+        const onclick = btn.getAttribute('onclick');
+        if (onclick) {
+            btn.removeAttribute('onclick');
+            if (onclick.includes('startCamera')) {
+                btn.addEventListener('click', startCamera);
+            } else if (onclick.includes('triggerUpload')) {
+                btn.addEventListener('click', triggerUpload);
+            }
+        }
+    });
+    
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        const filter = btn.getAttribute('data-filter');
+        const onclick = btn.getAttribute('onclick');
+        if (onclick && filter) {
+            btn.removeAttribute('onclick');
+            btn.addEventListener('click', () => selectFilter(filter));
+        }
+    });
+    
+    // Capture button
+    const captureBtn = document.getElementById('capture-button');
+    if (captureBtn) {
+        const onclick = captureBtn.getAttribute('onclick');
+        if (onclick) {
+            captureBtn.removeAttribute('onclick');
+            captureBtn.addEventListener('click', startCapture);
+        }
+    }
+    
+    // Action buttons (download, share, restart)
+    document.querySelectorAll('.action-btn').forEach(btn => {
+        const onclick = btn.getAttribute('onclick');
+        if (onclick) {
+            btn.removeAttribute('onclick');
+            if (onclick.includes('downloadStrip')) {
+                btn.addEventListener('click', downloadStrip);
+            } else if (onclick.includes('shareStrip')) {
+                btn.addEventListener('click', shareStrip);
+            } else if (onclick.includes('restart')) {
+                btn.addEventListener('click', restart);
+            }
+        }
+    });
+    
+    console.log('Event listeners set up complete');
 }
 
 // Initialize Audio Context
@@ -688,12 +794,13 @@ function applyFilter(ctx, width, height, filter) {
         let b = data[i + 2];
         
         switch (filter) {
-            case 'bw':
+            case 'bw': {
                 // Black & White with contrast
                 const gray = r * 0.299 + g * 0.587 + b * 0.114;
                 const adjusted = ((gray / 255 - 0.5) * 1.1 + 0.5) * 255;
                 r = g = b = Math.max(0, Math.min(255, adjusted));
                 break;
+            }
                 
             case 'color':
                 // No change
@@ -713,7 +820,7 @@ function applyFilter(ctx, width, height, filter) {
                 b = b * 0.7 + retroGray * 0.3;
                 break;
                 
-            case 'polaroid':
+            case 'polaroid': {
                 // VSCO M3 Polaroid Effect - Warm, faded, lifted shadows
                 // Step 1: Lift shadows significantly (brighten dark areas)
                 const shadowLift = 0.15;
@@ -732,16 +839,17 @@ function applyFilter(ctx, width, height, filter) {
                 b = ((b / 255 - 0.5) * 0.75 + 0.5) * 255;
                 
                 // Step 4: Slight desaturation for faded aesthetic
-                const gray = r * 0.299 + g * 0.587 + b * 0.114;
-                r = r * 0.85 + gray * 0.15;
-                g = g * 0.85 + gray * 0.15;
-                b = b * 0.85 + gray * 0.15;
+                const polaroidGray = r * 0.299 + g * 0.587 + b * 0.114;
+                r = r * 0.85 + polaroidGray * 0.15;
+                g = g * 0.85 + polaroidGray * 0.15;
+                b = b * 0.85 + polaroidGray * 0.15;
                 
                 // Step 5: Add slight brightness boost
                 r = Math.min(255, r * 1.05);
                 g = Math.min(255, g * 1.05);
                 b = Math.min(255, b * 1.03);
                 break;
+            }
                 
             case 'vintage':
                 // Heavy sepia/brown-grey with strong desaturation
