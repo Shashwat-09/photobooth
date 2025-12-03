@@ -772,9 +772,9 @@ body {
 /* Webcam Filters */
 .filter-bw { filter: grayscale(100%) contrast(1.1); }
 .filter-color { filter: none; }
-.filter-retro { filter: sepia(60%) saturate(1.4) contrast(1.1); }
-.filter-polaroid { filter: sepia(30%) saturate(1.2) brightness(1.1) contrast(0.9); }
-.filter-vintage { filter: sepia(40%) hue-rotate(-10deg) saturate(1.5) contrast(0.9); }
+.filter-retro { filter: grayscale(30%) sepia(20%) hue-rotate(180deg) saturate(0.7) contrast(1.1) brightness(0.95); }
+.filter-polaroid { filter: sepia(15%) saturate(1.1) brightness(1.08) contrast(0.85); }
+.filter-vintage { filter: sepia(50%) hue-rotate(-15deg) saturate(0.8) contrast(0.9) brightness(0.92); }
 .filter-noir { filter: grayscale(100%) contrast(1.4) brightness(0.9); }
 
 /* ============================================

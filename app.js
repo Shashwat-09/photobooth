@@ -369,8 +369,22 @@ function generatePhotoStrip() {
     const borderWidth = 15;
     const gapBetween = 5;
     
-    const stripWidth = photoWidth + (borderWidth * 2);
-    const stripHeight = (photoHeight * 4) + (borderWidth * 2) + (gapBetween * 3);
+    // Calculate dimensions based on filter
+    let stripWidth, stripHeight;
+    let photoSpacing = photoHeight + gapBetween;
+    
+    if (currentFilter === 'polaroid') {
+        const polaroidBorder = 20;
+        const polaroidBottomBorder = 60;
+        const polaroidWidth = photoWidth + (polaroidBorder * 2);
+        const polaroidHeight = photoHeight + polaroidBorder + polaroidBottomBorder;
+        stripWidth = polaroidWidth + (borderWidth * 2);
+        stripHeight = (polaroidHeight * 4) + (borderWidth * 2) + (gapBetween * 3);
+        photoSpacing = polaroidHeight + gapBetween;
+    } else {
+        stripWidth = photoWidth + (borderWidth * 2);
+        stripHeight = (photoHeight * 4) + (borderWidth * 2) + (gapBetween * 3);
+    }
     
     stripCanvas.width = stripWidth;
     stripCanvas.height = stripHeight;
@@ -386,15 +400,39 @@ function generatePhotoStrip() {
     
     // Draw each photo
     photos.forEach((photo, index) => {
-        const x = borderWidth;
-        const y = borderWidth + (index * (photoHeight + gapBetween));
+        let x, y;
         
-        // Photo frame
-        ctx.fillStyle = '#000000';
-        ctx.fillRect(x - 2, y - 2, photoWidth + 4, photoHeight + 4);
-        
-        // Photo
-        drawPhoto(ctx, photo, x, y, photoWidth, photoHeight);
+        if (currentFilter === 'polaroid') {
+            const polaroidBorder = 20;
+            const polaroidBottomBorder = 60;
+            const polaroidWidth = photoWidth + (polaroidBorder * 2);
+            const polaroidHeight = photoHeight + polaroidBorder + polaroidBottomBorder;
+            
+            x = borderWidth + polaroidBorder;
+            y = borderWidth + polaroidBorder + (index * photoSpacing);
+            
+            // White Polaroid frame
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(borderWidth, borderWidth + (index * photoSpacing), polaroidWidth, polaroidHeight);
+            
+            // Black border around Polaroid
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(borderWidth, borderWidth + (index * photoSpacing), polaroidWidth, polaroidHeight);
+            
+            // Draw photo
+            drawPhoto(ctx, photo, x, y, photoWidth, photoHeight);
+        } else {
+            x = borderWidth;
+            y = borderWidth + (index * photoSpacing);
+            
+            // Regular photo frame
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x - 2, y - 2, photoWidth + 4, photoHeight + 4);
+            
+            // Photo
+            drawPhoto(ctx, photo, x, y, photoWidth, photoHeight);
+        }
     });
 }
 
@@ -430,6 +468,110 @@ function drawPhoto(ctx, source, x, y, width, height) {
     ctx.drawImage(tempCanvas, x, y);
 }
 
+// Add film grain
+function addGrain(ctx, width, height, intensity = 0.15) {
+    const imageData = ctx.getImageData(0, 0, width, height);
+    const data = imageData.data;
+    
+    for (let i = 0; i < data.length; i += 4) {
+        const grain = (Math.random() - 0.5) * intensity * 255;
+        data[i] = Math.max(0, Math.min(255, data[i] + grain));
+        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + grain));
+        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + grain));
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+}
+
+// Add scratches and dust (for vintage effect)
+function addScratchesAndDust(ctx, width, height) {
+    const numScratches = Math.floor(width * height / 8000);
+    const numDust = Math.floor(width * height / 5000);
+    
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 0.5;
+    
+    // Add scratches
+    for (let i = 0; i < numScratches; i++) {
+        const x1 = Math.random() * width;
+        const y1 = Math.random() * height;
+        const x2 = x1 + (Math.random() - 0.5) * 20;
+        const y2 = y1 + (Math.random() - 0.5) * 20;
+        
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+    
+    // Add dark scratches
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+    for (let i = 0; i < numScratches / 2; i++) {
+        const x1 = Math.random() * width;
+        const y1 = Math.random() * height;
+        const x2 = x1 + (Math.random() - 0.5) * 15;
+        const y2 = y1 + (Math.random() - 0.5) * 15;
+        
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+    
+    // Add dust particles
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+    for (let i = 0; i < numDust; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = Math.random() * 1.5;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    for (let i = 0; i < numDust / 2; i++) {
+        const x = Math.random() * width;
+        const y = Math.random() * height;
+        const size = Math.random() * 1;
+        
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+}
+
+// Add vignette effect
+function addVignette(ctx, width, height, intensity = 0.4) {
+    const gradient = ctx.createRadialGradient(
+        width / 2, height / 2, height * 0.3,
+        width / 2, height / 2, height * 0.8
+    );
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    gradient.addColorStop(1, `rgba(0, 0, 0, ${intensity})`);
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, width, height);
+}
+
+// Add light leaks (for polaroid)
+function addLightLeaks(ctx, width, height) {
+    // Top left corner light leak
+    const leak1 = ctx.createRadialGradient(0, 0, 0, 0, 0, width * 0.4);
+    leak1.addColorStop(0, 'rgba(255, 200, 100, 0.15)');
+    leak1.addColorStop(1, 'rgba(255, 200, 100, 0)');
+    ctx.fillStyle = leak1;
+    ctx.fillRect(0, 0, width * 0.5, height * 0.3);
+    
+    // Top right corner light leak
+    const leak2 = ctx.createRadialGradient(width, 0, 0, width, 0, width * 0.3);
+    leak2.addColorStop(0, 'rgba(150, 200, 255, 0.12)');
+    leak2.addColorStop(1, 'rgba(150, 200, 255, 0)');
+    ctx.fillStyle = leak2;
+    ctx.fillRect(width * 0.5, 0, width * 0.5, height * 0.25);
+}
+
 function applyFilter(ctx, width, height, filter) {
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
@@ -452,29 +594,46 @@ function applyFilter(ctx, width, height, filter) {
                 break;
                 
             case 'retro':
-                // Warm sepia with saturation
-                r = Math.min(255, r * 1.1 + 30);
-                g = Math.min(255, g * 1.0 + 15);
-                b = Math.min(255, b * 0.8);
+                // Cool-toned retro with greenish-blue tint and desaturation
+                // Desaturate first
+                const retroGray = r * 0.3 + g * 0.59 + b * 0.11;
+                // Apply cool greenish-blue tint
+                r = retroGray * 0.85 + 20;  // Reduced red
+                g = retroGray * 0.95 + 15;  // Slight green tint
+                b = retroGray * 1.05 + 25;  // Increased blue
+                // Add slight desaturation
+                r = r * 0.7 + retroGray * 0.3;
+                g = g * 0.7 + retroGray * 0.3;
+                b = b * 0.7 + retroGray * 0.3;
                 break;
                 
             case 'polaroid':
-                // Soft, slightly faded with warm tint
-                r = Math.min(255, r * 1.05 + 15);
-                g = Math.min(255, g * 1.02 + 10);
-                b = Math.min(255, b * 0.95 + 5);
-                // Reduce contrast slightly
-                r = ((r / 255 - 0.5) * 0.9 + 0.5) * 255 + 10;
-                g = ((g / 255 - 0.5) * 0.9 + 0.5) * 255 + 5;
-                b = ((b / 255 - 0.5) * 0.9 + 0.5) * 255;
+                // Warm, soft Polaroid look with lifted shadows
+                // Lift shadows (brighten dark areas)
+                r = r + (255 - r) * 0.08;
+                g = g + (255 - g) * 0.06;
+                b = b + (255 - b) * 0.04;
+                // Warm tone shift
+                r = Math.min(255, r * 1.05 + 12);
+                g = Math.min(255, g * 1.02 + 8);
+                b = Math.min(255, b * 0.98);
+                // Soft contrast
+                r = ((r / 255 - 0.5) * 0.85 + 0.5) * 255;
+                g = ((g / 255 - 0.5) * 0.85 + 0.5) * 255;
+                b = ((b / 255 - 0.5) * 0.85 + 0.5) * 255;
                 break;
                 
             case 'vintage':
-                // Brown/sepia tones with fade
+                // Heavy sepia/brown-grey with strong desaturation
                 const vintageGray = r * 0.3 + g * 0.59 + b * 0.11;
-                r = Math.min(255, vintageGray * 1.2 + 40);
-                g = Math.min(255, vintageGray * 1.0 + 20);
-                b = Math.min(255, vintageGray * 0.8);
+                // Sepia brown tones
+                r = Math.min(255, vintageGray * 1.3 + 35);
+                g = Math.min(255, vintageGray * 1.1 + 20);
+                b = Math.min(255, vintageGray * 0.85);
+                // Darken slightly for aged look
+                r *= 0.92;
+                g *= 0.92;
+                b *= 0.92;
                 break;
                 
             case 'noir':
@@ -491,6 +650,35 @@ function applyFilter(ctx, width, height, filter) {
     }
     
     ctx.putImageData(imageData, 0, 0);
+    
+    // Apply texture effects based on filter
+    switch (filter) {
+        case 'retro':
+            // Heavy film grain for retro
+            addGrain(ctx, width, height, 0.25);
+            addVignette(ctx, width, height, 0.2);
+            break;
+            
+        case 'polaroid':
+            // Subtle grain and light leaks for polaroid
+            addGrain(ctx, width, height, 0.1);
+            addLightLeaks(ctx, width, height);
+            addVignette(ctx, width, height, 0.15);
+            break;
+            
+        case 'vintage':
+            // Heavy grain, scratches, dust, and vignette for vintage
+            addGrain(ctx, width, height, 0.3);
+            addScratchesAndDust(ctx, width, height);
+            addVignette(ctx, width, height, 0.5);
+            break;
+            
+        case 'noir':
+            // Subtle grain for noir
+            addGrain(ctx, width, height, 0.12);
+            addVignette(ctx, width, height, 0.3);
+            break;
+    }
 }
 
 // Download
