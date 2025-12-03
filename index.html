@@ -292,5 +292,100 @@
     </audio>
 
     <script src="app.js"></script>
+    <script>
+        // Immediate function availability check and setup
+        window.addEventListener('load', function() {
+            console.log('Page fully loaded');
+            console.log('navigateTo available:', typeof window.navigateTo);
+            
+            // Force setup all event listeners
+            if (typeof setupEventListeners === 'function') {
+                setupEventListeners();
+            }
+            
+            // Additional backup: direct event listeners
+            setTimeout(function() {
+                // Enter button
+                var enterBtn = document.querySelector('.enter-btn');
+                if (enterBtn) {
+                    // Remove onclick and use addEventListener
+                    enterBtn.removeAttribute('onclick');
+                    enterBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Enter clicked');
+                        if (typeof window.navigateTo === 'function') {
+                            window.navigateTo('select-page');
+                        } else {
+                            alert('Navigation function not loaded. Please refresh the page.');
+                        }
+                    }, true);
+                }
+                
+                // All buttons with onclick - convert to event listeners
+                document.querySelectorAll('[onclick]').forEach(function(btn) {
+                    var onclick = btn.getAttribute('onclick');
+                    if (onclick) {
+                        btn.removeAttribute('onclick');
+                        // Parse and set up listener
+                        if (onclick.includes("navigateTo('select-page')")) {
+                            btn.addEventListener('click', function() { 
+                                if (window.navigateTo) window.navigateTo('select-page'); 
+                            });
+                        } else if (onclick.includes("navigateTo('about-page')")) {
+                            btn.addEventListener('click', function() { 
+                                if (window.navigateTo) window.navigateTo('about-page'); 
+                            });
+                        } else if (onclick.includes("navigateTo('contact-page')")) {
+                            btn.addEventListener('click', function() { 
+                                if (window.navigateTo) window.navigateTo('contact-page'); 
+                            });
+                        } else if (onclick.includes("navigateTo('landing-page')")) {
+                            btn.addEventListener('click', function() { 
+                                if (window.navigateTo) window.navigateTo('landing-page'); 
+                            });
+                        } else if (onclick.includes('startCamera()')) {
+                            btn.addEventListener('click', function() { 
+                                if (window.startCamera) window.startCamera(); 
+                            });
+                        } else if (onclick.includes('triggerUpload()')) {
+                            btn.addEventListener('click', function() { 
+                                if (window.triggerUpload) window.triggerUpload(); 
+                            });
+                        } else if (onclick.includes("selectFilter('")) {
+                            var match = onclick.match(/selectFilter\('([^']+)'\)/);
+                            if (match && window.selectFilter) {
+                                btn.addEventListener('click', function() { 
+                                    window.selectFilter(match[1]); 
+                                });
+                            }
+                        } else if (onclick.includes('stopAndGoBack()')) {
+                            btn.addEventListener('click', function() { 
+                                if (window.stopAndGoBack) window.stopAndGoBack(); 
+                            });
+                        } else if (onclick.includes('startCapture()')) {
+                            btn.addEventListener('click', function() { 
+                                if (window.startCapture) window.startCapture(); 
+                            });
+                        } else if (onclick.includes('downloadStrip()')) {
+                            btn.addEventListener('click', function() { 
+                                if (window.downloadStrip) window.downloadStrip(); 
+                            });
+                        } else if (onclick.includes('shareStrip()')) {
+                            btn.addEventListener('click', function() { 
+                                if (window.shareStrip) window.shareStrip(); 
+                            });
+                        } else if (onclick.includes('restart()')) {
+                            btn.addEventListener('click', function() { 
+                                if (window.restart) window.restart(); 
+                            });
+                        }
+                    }
+                });
+                
+                console.log('All event listeners set up');
+            }, 200);
+        });
+    </script>
 </body>
 </html>
