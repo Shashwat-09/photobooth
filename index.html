@@ -292,5 +292,29 @@
     </audio>
 
     <script src="app.js"></script>
+    <script>
+        // Verify functions are available after script loads
+        window.addEventListener('load', function() {
+            console.log('Page loaded. Checking functions...');
+            console.log('navigateTo:', typeof window.navigateTo);
+            console.log('startCamera:', typeof window.startCamera);
+            console.log('selectFilter:', typeof window.selectFilter);
+            
+            // Test enter button
+            var enterBtn = document.querySelector('.enter-btn');
+            if (enterBtn) {
+                console.log('Enter button found');
+                // Add backup listener
+                enterBtn.addEventListener('click', function(e) {
+                    console.log('Enter button clicked');
+                    if (typeof window.navigateTo === 'function') {
+                        window.navigateTo('select-page');
+                    } else {
+                        console.error('navigateTo function not found!');
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>

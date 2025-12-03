@@ -2,6 +2,9 @@
    SKETCH PHOTOBOOTH - Main Application
    ============================================= */
 
+// Test that script is loading
+console.log('Photobooth app.js loaded');
+
 // Global State
 let stream = null;
 let photos = [];
@@ -42,9 +45,33 @@ document.addEventListener('DOMContentLoaded', () => {
     photoCounter = document.getElementById('photo-counter');
     currentFilterDisplay = document.getElementById('current-filter-display');
     
+    // Set up all button event listeners
+    setupEventListeners();
+    
     // Initialize audio context on first user interaction
     document.addEventListener('click', initAudio, { once: true });
 });
+
+// Set up all event listeners for buttons (backup if onclick doesn't work)
+function setupEventListeners() {
+    // This is a backup - onclick handlers should work, but this ensures they do
+    console.log('Setting up event listeners...');
+    console.log('navigateTo available:', typeof window.navigateTo);
+    
+    // Enter button
+    const enterBtn = document.querySelector('.enter-btn');
+    if (enterBtn) {
+        enterBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (typeof navigateTo === 'function') {
+                navigateTo('select-page');
+            } else {
+                console.error('navigateTo not available');
+            }
+        });
+    }
+}
 
 // Initialize Audio Context
 function initAudio() {
