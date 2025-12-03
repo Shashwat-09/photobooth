@@ -555,21 +555,29 @@ function addVignette(ctx, width, height, intensity = 0.4) {
     ctx.fillRect(0, 0, width, height);
 }
 
-// Add light leaks (for polaroid)
+// Add light leaks (for polaroid - VSCO M3 style)
 function addLightLeaks(ctx, width, height) {
-    // Top left corner light leak
-    const leak1 = ctx.createRadialGradient(0, 0, 0, 0, 0, width * 0.4);
-    leak1.addColorStop(0, 'rgba(255, 200, 100, 0.15)');
-    leak1.addColorStop(1, 'rgba(255, 200, 100, 0)');
+    // Top left corner warm yellow-orange light leak (VSCO M3 signature)
+    const leak1 = ctx.createRadialGradient(0, 0, 0, 0, 0, width * 0.45);
+    leak1.addColorStop(0, 'rgba(255, 220, 140, 0.18)');  // Warm yellow-orange
+    leak1.addColorStop(0.5, 'rgba(255, 200, 120, 0.08)');
+    leak1.addColorStop(1, 'rgba(255, 200, 120, 0)');
     ctx.fillStyle = leak1;
-    ctx.fillRect(0, 0, width * 0.5, height * 0.3);
+    ctx.fillRect(0, 0, width * 0.55, height * 0.35);
     
-    // Top right corner light leak
-    const leak2 = ctx.createRadialGradient(width, 0, 0, width, 0, width * 0.3);
-    leak2.addColorStop(0, 'rgba(150, 200, 255, 0.12)');
-    leak2.addColorStop(1, 'rgba(150, 200, 255, 0)');
+    // Top right corner subtle warm light leak
+    const leak2 = ctx.createRadialGradient(width, 0, 0, width, 0, width * 0.35);
+    leak2.addColorStop(0, 'rgba(255, 210, 130, 0.12)');  // Warm yellow
+    leak2.addColorStop(1, 'rgba(255, 210, 130, 0)');
     ctx.fillStyle = leak2;
-    ctx.fillRect(width * 0.5, 0, width * 0.5, height * 0.25);
+    ctx.fillRect(width * 0.45, 0, width * 0.55, height * 0.28);
+    
+    // Bottom subtle warm glow
+    const leak3 = ctx.createRadialGradient(width / 2, height, 0, width / 2, height, height * 0.4);
+    leak3.addColorStop(0, 'rgba(255, 200, 110, 0.08)');
+    leak3.addColorStop(1, 'rgba(255, 200, 110, 0)');
+    ctx.fillStyle = leak3;
+    ctx.fillRect(0, height * 0.6, width, height * 0.4);
 }
 
 function applyFilter(ctx, width, height, filter) {
@@ -608,19 +616,33 @@ function applyFilter(ctx, width, height, filter) {
                 break;
                 
             case 'polaroid':
-                // Warm, soft Polaroid look with lifted shadows
-                // Lift shadows (brighten dark areas)
-                r = r + (255 - r) * 0.08;
-                g = g + (255 - g) * 0.06;
-                b = b + (255 - b) * 0.04;
-                // Warm tone shift
-                r = Math.min(255, r * 1.05 + 12);
-                g = Math.min(255, g * 1.02 + 8);
-                b = Math.min(255, b * 0.98);
-                // Soft contrast
-                r = ((r / 255 - 0.5) * 0.85 + 0.5) * 255;
-                g = ((g / 255 - 0.5) * 0.85 + 0.5) * 255;
-                b = ((b / 255 - 0.5) * 0.85 + 0.5) * 255;
+                // VSCO M3 Polaroid Effect - Warm, faded, lifted shadows
+                // Step 1: Lift shadows significantly (brighten dark areas)
+                const shadowLift = 0.15;
+                r = r + (255 - r) * shadowLift;
+                g = g + (255 - g) * shadowLift;
+                b = b + (255 - b) * shadowLift;
+                
+                // Step 2: Apply warm yellow-orange tone shift (VSCO M3 signature)
+                r = Math.min(255, r * 1.12 + 25);  // Strong warm red/yellow
+                g = Math.min(255, g * 1.08 + 18);  // Warm yellow
+                b = Math.min(255, b * 0.88 - 5);   // Reduce blue for warmth
+                
+                // Step 3: Soft contrast curve (faded look)
+                r = ((r / 255 - 0.5) * 0.75 + 0.5) * 255;
+                g = ((g / 255 - 0.5) * 0.75 + 0.5) * 255;
+                b = ((b / 255 - 0.5) * 0.75 + 0.5) * 255;
+                
+                // Step 4: Slight desaturation for faded aesthetic
+                const gray = r * 0.299 + g * 0.587 + b * 0.114;
+                r = r * 0.85 + gray * 0.15;
+                g = g * 0.85 + gray * 0.15;
+                b = b * 0.85 + gray * 0.15;
+                
+                // Step 5: Add slight brightness boost
+                r = Math.min(255, r * 1.05);
+                g = Math.min(255, g * 1.05);
+                b = Math.min(255, b * 1.03);
                 break;
                 
             case 'vintage':
@@ -660,10 +682,10 @@ function applyFilter(ctx, width, height, filter) {
             break;
             
         case 'polaroid':
-            // Subtle grain and light leaks for polaroid
-            addGrain(ctx, width, height, 0.1);
-            addLightLeaks(ctx, width, height);
-            addVignette(ctx, width, height, 0.15);
+            // VSCO M3 style - very subtle grain, soft light leaks, minimal vignette
+            addGrain(ctx, width, height, 0.08);  // Very subtle grain
+            addLightLeaks(ctx, width, height);  // Soft warm light leaks
+            addVignette(ctx, width, height, 0.1);  // Minimal vignette for softness
             break;
             
         case 'vintage':
