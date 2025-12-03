@@ -1,71 +1,66 @@
-# Retro Photobooth
+# Sketch Photobooth
 
-A cute, vintage-styled photobooth web application that captures photos using your webcam and creates classic photo strips.
+A cute, hand-drawn style photobooth web application inspired by [mysketchbooth.com](https://mysketchbooth.com/). Captures photos using your webcam and creates classic photo strips.
 
-**Author:** Shashwat Shah  
-**GitHub:** [github.com/Shashwat-09/photobooth](https://github.com/Shashwat-09/photobooth)
+**Author:** Shashwat Shah (22 y/o Developer & Cybersecurity Expert)  
+**GitHub:** [github.com/Shashwat-09/photobooth](https://github.com/Shashwat-09/photobooth)  
+**Contact:** shashwatshah03@gmail.com
+
+## Live Demo
+
+🔗 **[https://shashwat-09.github.io/photobooth/](https://shashwat-09.github.io/photobooth/)**
 
 ## Features
 
+- **Hand-drawn Sketch UI** - Cute doodle-style interface
 - **Webcam Integration** - Live camera preview with mirror effect
-- **Countdown Timer** - 3-second countdown with animated numbers before each shot
-- **Photo Strip** - Captures 4 photos and arranges them in a classic vertical strip
-- **Vintage Effects** - Sepia tones, vignette, and paper texture for authentic retro look
-- **Flash Effect** - Visual flash feedback when photos are captured
-- **Download** - Save your photo strip as a PNG file
-- **Responsive Design** - Works on desktop and mobile devices
+- **6 Photo Filters** - B&W, Color, Retro, Polaroid, Vintage, Noir
+- **Countdown Timer** - Animated 3-2-1 countdown with sound
+- **Photo Strip** - Captures 4 photos in a classic vertical strip
+- **Shutter Sound** - Audio feedback when photos are captured
+- **Flash Effect** - Visual flash on capture
+- **Download/Share** - Save or share your photo strip
+- **Responsive Design** - Works on desktop and mobile
 
-## Getting Started
+## Pages
 
-### Option 1: Open directly
-Simply open `index.html` in a modern web browser.
+1. **Landing** - Cute photobooth exterior with enter button
+2. **About Me** - Developer info
+3. **Contact** - Email contact
+4. **Select** - Choose filter and start camera
+5. **Camera** - Take 4 photos with countdown
+6. **Printing** - "Photos delivered in 3 seconds" animation
+7. **Result** - View, download, share, or retake
 
-> Note: Some browsers may require a local server for webcam access.
+## Usage
 
-### Option 2: Local server (recommended)
+1. Click **"Enter"** on the photobooth
+2. Choose your **filter** (B&W, Retro, Polaroid, etc.)
+3. Click **"Take Photo"** to start camera
+4. Click **"START"** to begin capture
+5. Pose for 4 photos (3-second countdown each)
+6. **Download** your photo strip!
+
+## Tech Stack
+
+- Pure HTML, CSS, JavaScript
+- No frameworks or build tools
+- Web Audio API for sounds
+- Canvas API for image processing
+- MediaDevices API for webcam
+
+## Local Development
+
 ```bash
-# Using Python 3
+# Using Python
 python -m http.server 8000
 
 # Using Node.js
 npx serve
 
-# Using PHP
-php -S localhost:8000
+# Then visit http://localhost:8000
 ```
-
-Then visit `http://localhost:8000` in your browser.
-
-## Usage
-
-1. Click **"Start Camera"** to enable your webcam
-2. Allow camera access when prompted
-3. Click **"Take Photos"** to begin the photo session
-4. Smile! The app will take 4 photos with a 3-second countdown between each
-5. View your completed photo strip
-6. Click **"Download"** to save or **"Retake"** to try again
-
-## Browser Support
-
-Requires a modern browser with:
-- WebRTC/getUserMedia API (for webcam access)
-- Canvas API (for image processing)
-
-Tested on:
-- Chrome 80+
-- Firefox 75+
-- Safari 14+
-- Edge 80+
-
-## Technical Details
-
-- **No build step required** - Pure HTML, CSS, and JavaScript
-- **No dependencies** - Everything runs client-side
-- **Privacy-focused** - Photos never leave your device
 
 ## License
 
 MIT License - Copyright (c) 2025 Shashwat Shah
-
-See [LICENSE](LICENSE) for details.
-
