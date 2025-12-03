@@ -124,6 +124,7 @@ function stopAndGoBack() {
     // Go back to select page
     navigateTo('select-page');
 }
+window.stopAndGoBack = stopAndGoBack;
 
 // Filter Selection
 function selectFilter(filter) {
@@ -151,6 +152,7 @@ function selectFilter(filter) {
         currentFilterDisplay.textContent = filterNames[filter] || filter;
     }
 }
+window.selectFilter = selectFilter;
 
 // Update webcam filter
 function updateWebcamFilter() {
@@ -202,11 +204,13 @@ async function startCamera() {
         alert('Could not access camera. Please allow camera permissions and try again.');
     }
 }
+window.startCamera = startCamera;
 
 // Handle photo upload
 function triggerUpload() {
     document.getElementById('photo-upload').click();
 }
+window.triggerUpload = triggerUpload;
 
 async function handleUpload(event) {
     const files = Array.from(event.target.files);
@@ -236,7 +240,7 @@ function loadImage(file) {
     });
 }
 
-// Start Photo Capture Sequence
+// Start Photo Capture Sequence  
 async function startCapture() {
     if (isCapturing) return;
     
@@ -292,6 +296,7 @@ async function startCapture() {
         navigateTo('result-page');
     }
 }
+window.startCapture = startCapture;
 
 // Countdown
 async function showCountdown() {
@@ -716,6 +721,7 @@ function downloadStrip() {
     link.href = stripCanvas.toDataURL('image/png', 1.0);
     link.click();
 }
+window.downloadStrip = downloadStrip;
 
 // Share
 async function shareStrip() {
@@ -733,6 +739,7 @@ async function shareStrip() {
         downloadStrip();
     }
 }
+window.shareStrip = shareStrip;
 
 // Restart
 function restart() {
@@ -746,22 +753,12 @@ function restart() {
     selectFilter('bw');
     navigateTo('landing-page');
 }
+window.restart = restart;
 
 // Utility
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-// Expose all functions globally for inline onclick handlers
-window.navigateTo = navigateTo;
-window.startCamera = startCamera;
-window.triggerUpload = triggerUpload;
-window.selectFilter = selectFilter;
-window.stopAndGoBack = stopAndGoBack;
-window.startCapture = startCapture;
-window.downloadStrip = downloadStrip;
-window.shareStrip = shareStrip;
-window.restart = restart;
 
 // Cleanup
 window.addEventListener('beforeunload', () => {
