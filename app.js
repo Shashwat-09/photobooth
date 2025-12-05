@@ -275,11 +275,7 @@ function selectFilter(filter) {
     // Update filter display
     const filterNames = {
         'bw': 'B&W',
-        'color': 'Color',
-        'retro': 'Retro',
-        'polaroid': 'Polaroid',
-        'vintage': 'Vintage',
-        'noir': 'Noir'
+        'color': 'Color'
     };
     if (currentFilterDisplay) {
         currentFilterDisplay.textContent = filterNames[filter] || filter;
@@ -292,20 +288,30 @@ function updateWebcamFilter() {
     if (!webcam) return;
     
     // Remove all filter classes
-    webcam.classList.remove('filter-bw', 'filter-color', 'filter-retro', 'filter-polaroid', 'filter-vintage', 'filter-noir');
+    webcam.classList.remove('filter-bw', 'filter-color');
     
     // Add current filter class
-    webcam.classList.add(`filter-${currentFilter}`);
+    if (currentFilter === 'bw' || currentFilter === 'color') {
+        webcam.classList.add(`filter-${currentFilter}`);
+    }
 }
 
-// Start Camera
+// Start Camera - Maximum Quality Settings
 async function startCamera() {
     try {
         stream = await navigator.mediaDevices.getUserMedia({
             video: {
-                width: { ideal: 1920, min: 1280 },
-                height: { ideal: 1080, min: 720 },
-                facingMode: 'user'
+                width: { ideal: 3840, min: 1920 },  // 4K if available
+                height: { ideal: 2160, min: 1080 }, // 4K if available
+                facingMode: 'user',
+                aspectRatio: { ideal: 16/9 },
+                frameRate: { ideal: 30 },
+                // Request highest quality
+                advanced: [
+                    { width: { ideal: 3840 } },
+                    { height: { ideal: 2160 } },
+                    { frameRate: { ideal: 30 } }
+                ]
             },
             audio: false
         });
@@ -319,14 +325,10 @@ async function startCamera() {
         // Update filter display
         const filterNames = {
             'bw': 'B&W',
-            'color': 'Color',
-            'retro': 'Retro',
-            'polaroid': 'Polaroid',
-            'vintage': 'Vintage',
-            'noir': 'Noir'
+            'color': 'Color'
         };
         if (currentFilterDisplay) {
-            currentFilterDisplay.textContent = filterNames[currentFilter];
+            currentFilterDisplay.textContent = filterNames[currentFilter] || 'Color';
         }
         
         // Navigate to camera page
@@ -573,22 +575,10 @@ function generatePhotoStrip() {
     const borderWidth = 15;
     const gapBetween = 5;
     
-    // Calculate dimensions based on filter
-    let stripWidth, stripHeight;
-    let photoSpacing = photoHeight + gapBetween;
-    
-    if (currentFilter === 'polaroid') {
-        const polaroidBorder = 20;
-        const polaroidBottomBorder = 60;
-        const polaroidWidth = photoWidth + (polaroidBorder * 2);
-        const polaroidHeight = photoHeight + polaroidBorder + polaroidBottomBorder;
-        stripWidth = polaroidWidth + (borderWidth * 2);
-        stripHeight = (polaroidHeight * 4) + (borderWidth * 2) + (gapBetween * 3);
-        photoSpacing = polaroidHeight + gapBetween;
-    } else {
-        stripWidth = photoWidth + (borderWidth * 2);
-        stripHeight = (photoHeight * 4) + (borderWidth * 2) + (gapBetween * 3);
-    }
+    // Calculate dimensions
+    const stripWidth = photoWidth + (borderWidth * 2);
+    const stripHeight = (photoHeight * 4) + (borderWidth * 2) + (gapBetween * 3);
+    const photoSpacing = photoHeight + gapBetween;
     
     stripCanvas.width = stripWidth;
     stripCanvas.height = stripHeight;
@@ -803,72 +793,7 @@ function applyFilter(ctx, width, height, filter) {
             }
                 
             case 'color':
-                // No change
-                break;
-                
-            case 'retro':
-                // Cool-toned retro with greenish-blue tint and desaturation
-                // Desaturate first
-                const retroGray = r * 0.3 + g * 0.59 + b * 0.11;
-                // Apply cool greenish-blue tint
-                r = retroGray * 0.85 + 20;  // Reduced red
-                g = retroGray * 0.95 + 15;  // Slight green tint
-                b = retroGray * 1.05 + 25;  // Increased blue
-                // Add slight desaturation
-                r = r * 0.7 + retroGray * 0.3;
-                g = g * 0.7 + retroGray * 0.3;
-                b = b * 0.7 + retroGray * 0.3;
-                break;
-                
-            case 'polaroid': {
-                // VSCO M3 Polaroid Effect - Warm, faded, lifted shadows
-                // Step 1: Lift shadows significantly (brighten dark areas)
-                const shadowLift = 0.15;
-                r = r + (255 - r) * shadowLift;
-                g = g + (255 - g) * shadowLift;
-                b = b + (255 - b) * shadowLift;
-                
-                // Step 2: Apply warm yellow-orange tone shift (VSCO M3 signature)
-                r = Math.min(255, r * 1.12 + 25);  // Strong warm red/yellow
-                g = Math.min(255, g * 1.08 + 18);  // Warm yellow
-                b = Math.min(255, b * 0.88 - 5);   // Reduce blue for warmth
-                
-                // Step 3: Soft contrast curve (faded look)
-                r = ((r / 255 - 0.5) * 0.75 + 0.5) * 255;
-                g = ((g / 255 - 0.5) * 0.75 + 0.5) * 255;
-                b = ((b / 255 - 0.5) * 0.75 + 0.5) * 255;
-                
-                // Step 4: Slight desaturation for faded aesthetic
-                const polaroidGray = r * 0.299 + g * 0.587 + b * 0.114;
-                r = r * 0.85 + polaroidGray * 0.15;
-                g = g * 0.85 + polaroidGray * 0.15;
-                b = b * 0.85 + polaroidGray * 0.15;
-                
-                // Step 5: Add slight brightness boost
-                r = Math.min(255, r * 1.05);
-                g = Math.min(255, g * 1.05);
-                b = Math.min(255, b * 1.03);
-                break;
-            }
-                
-            case 'vintage':
-                // Heavy sepia/brown-grey with strong desaturation
-                const vintageGray = r * 0.3 + g * 0.59 + b * 0.11;
-                // Sepia brown tones
-                r = Math.min(255, vintageGray * 1.3 + 35);
-                g = Math.min(255, vintageGray * 1.1 + 20);
-                b = Math.min(255, vintageGray * 0.85);
-                // Darken slightly for aged look
-                r *= 0.92;
-                g *= 0.92;
-                b *= 0.92;
-                break;
-                
-            case 'noir':
-                // High contrast B&W
-                const noirGray = r * 0.299 + g * 0.587 + b * 0.114;
-                const noirAdjusted = ((noirGray / 255 - 0.5) * 1.5 + 0.5) * 255;
-                r = g = b = Math.max(0, Math.min(255, noirAdjusted * 0.9));
+                // No change - keep original colors
                 break;
         }
         
@@ -879,33 +804,11 @@ function applyFilter(ctx, width, height, filter) {
     
     ctx.putImageData(imageData, 0, 0);
     
-    // Apply texture effects based on filter
-    switch (filter) {
-        case 'retro':
-            // Heavy film grain for retro
-            addGrain(ctx, width, height, 0.25);
-            addVignette(ctx, width, height, 0.2);
-            break;
-            
-        case 'polaroid':
-            // VSCO M3 style - very subtle grain, soft light leaks, minimal vignette
-            addGrain(ctx, width, height, 0.08);  // Very subtle grain
-            addLightLeaks(ctx, width, height);  // Soft warm light leaks
-            addVignette(ctx, width, height, 0.1);  // Minimal vignette for softness
-            break;
-            
-        case 'vintage':
-            // Heavy grain, scratches, dust, and vignette for vintage
-            addGrain(ctx, width, height, 0.3);
-            addScratchesAndDust(ctx, width, height);
-            addVignette(ctx, width, height, 0.5);
-            break;
-            
-        case 'noir':
-            // Subtle grain for noir
-            addGrain(ctx, width, height, 0.12);
-            addVignette(ctx, width, height, 0.3);
-            break;
+    // Apply texture effects based on filter (only for B&W)
+    if (filter === 'bw') {
+        // Subtle grain for B&W
+        addGrain(ctx, width, height, 0.08);
+        addVignette(ctx, width, height, 0.15);
     }
 }
 

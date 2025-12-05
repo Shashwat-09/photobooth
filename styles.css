@@ -772,10 +772,6 @@ body {
 /* Webcam Filters */
 .filter-bw { filter: grayscale(100%) contrast(1.1); }
 .filter-color { filter: none; }
-.filter-retro { filter: grayscale(30%) sepia(20%) hue-rotate(180deg) saturate(0.7) contrast(1.1) brightness(0.95); }
-.filter-polaroid { filter: sepia(25%) saturate(0.9) brightness(1.12) contrast(0.75) hue-rotate(5deg); }
-.filter-vintage { filter: sepia(50%) hue-rotate(-15deg) saturate(0.8) contrast(0.9) brightness(0.92); }
-.filter-noir { filter: grayscale(100%) contrast(1.4) brightness(0.9); }
 
 /* ============================================
    PRINTING PAGE
