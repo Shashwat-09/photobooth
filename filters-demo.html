@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Photo Filters Demo - Photobooth</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .camera-section {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .camera-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .video-container {
+            position: relative;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .overlay-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .overlay.vignette {
+            background: radial-gradient(circle, transparent 30%, rgba(0,0,0,0.7) 100%);
+            mix-blend-mode: multiply;
+        }
+
+        .overlay.lightleak {
+            background-image: url('assets/filters/lightleak.png');
+            background-size: cover;
+            background-position: center;
+            mix-blend-mode: screen;
+        }
+
+        .overlay.grain {
+            background-image: url('assets/filters/filmgrain.png');
+            background-size: 200px;
+            mix-blend-mode: overlay;
+        }
+
+        .overlay.dust {
+            background-image: url('assets/filters/dust.png');
+            background-size: cover;
+            background-position: center;
+            mix-blend-mode: screen;
+        }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .filter-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .filter-btn {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .filter-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .filter-btn[aria-pressed="true"] {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .filter-description {
+            font-size: 11px;
+            color: #666;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .slider-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .action-btn.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .action-btn.secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .help-text {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .help-text strong {
+            color: #667eea;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .notice {
+            background: #fff3cd;
+            color: #856404;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .notice.show {
+            display: block;
+        }
+
+        #exportCanvas {
+            display: none;
+        }
+
+        .status {
+            text-align: center;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Photo Filters Demo</h1>
+        <p class="subtitle">Test Vintage, Retro, Polaroid, and Faded Film filters with live camera preview</p>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="camera-section">
+            <div class="video-container">
+                <video id="video" autoplay playsinline></video>
+                <div class="overlay-container">
+                    <div class="overlay vignette" id="vignetteOverlay"></div>
+                    <div class="overlay lightleak" id="lightleakOverlay"></div>
+                    <div class="overlay grain" id="grainOverlay"></div>
+                    <div class="overlay dust" id="dustOverlay"></div>
+                </div>
+            </div>
+
+            <div class="controls">
+                <div class="filter-buttons">
+                    <button class="filter-btn" data-filter="vintage" aria-pressed="false" aria-label="Vintage filter">
+                        Vintage
+                        <div class="filter-description">Brownish tones, lower saturation</div>
+                    </button>
+                    <button class="filter-btn" data-filter="retro" aria-pressed="false" aria-label="Retro filter">
+                        Retro
+                        <div class="filter-description">High contrast, vibrant colors</div>
+                    </button>
+                    <button class="filter-btn" data-filter="polaroid" aria-pressed="false" aria-label="Polaroid filter">
+                        Polaroid
+                        <div class="filter-description">Warm, bright, soft contrast</div>
+                    </button>
+                    <button class="filter-btn" data-filter="fadedfilm" aria-pressed="false" aria-label="Faded Film filter">
+                        Faded Film
+                        <div class="filter-description">Low contrast, desaturated</div>
+                    </button>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Intensity</span>
+                        <span class="slider-value" id="intensityValue">1.00</span>
+                    </div>
+                    <input type="range" id="intensity" min="0" max="1" step="0.01" value="1" aria-label="Filter intensity">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Grain</span>
+                        <span class="slider-value" id="grainValue">0.50</span>
+                    </div>
+                    <input type="range" id="grain" min="0" max="1" step="0.01" value="0.5" aria-label="Film grain opacity">
+                </div>
+
+                <div class="action-buttons">
+                    <button class="action-btn primary" id="captureBtn" aria-label="Capture photo (Space)">📸 Capture</button>
+                    <button class="action-btn secondary" id="downloadBtn" disabled aria-label="Download last captured photo">💾 Download</button>
+                </div>
+
+                <div class="status" id="status">Click a filter to start preview</div>
+
+                <div class="help-text">
+                    <strong>Keyboard Shortcut:</strong> Press <kbd>Space</kbd> to capture<br>
+                    <strong>Tip:</strong> Adjust intensity and grain sliders to fine-tune the effect
+                </div>
+
+                <div class="notice" id="ctxFilterNotice">
+                    Note: Canvas filter API not fully supported. Overlays will be applied but color grading may be limited.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <canvas id="exportCanvas" width="640" height="480" style="display:none;"></canvas>
+
+    <script src="filters-demo.js"></script>
+</body>
+</html>
+

@@ -594,39 +594,15 @@ function generatePhotoStrip() {
     
     // Draw each photo
     photos.forEach((photo, index) => {
-        let x, y;
+        const x = borderWidth;
+        const y = borderWidth + (index * photoSpacing);
         
-        if (currentFilter === 'polaroid') {
-            const polaroidBorder = 20;
-            const polaroidBottomBorder = 60;
-            const polaroidWidth = photoWidth + (polaroidBorder * 2);
-            const polaroidHeight = photoHeight + polaroidBorder + polaroidBottomBorder;
-            
-            x = borderWidth + polaroidBorder;
-            y = borderWidth + polaroidBorder + (index * photoSpacing);
-            
-            // White Polaroid frame
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(borderWidth, borderWidth + (index * photoSpacing), polaroidWidth, polaroidHeight);
-            
-            // Black border around Polaroid
-            ctx.strokeStyle = '#000000';
-            ctx.lineWidth = 2;
-            ctx.strokeRect(borderWidth, borderWidth + (index * photoSpacing), polaroidWidth, polaroidHeight);
-            
-            // Draw photo
-            drawPhoto(ctx, photo, x, y, photoWidth, photoHeight);
-        } else {
-            x = borderWidth;
-            y = borderWidth + (index * photoSpacing);
-            
-            // Regular photo frame
-            ctx.fillStyle = '#000000';
-            ctx.fillRect(x - 2, y - 2, photoWidth + 4, photoHeight + 4);
-            
-            // Photo
-            drawPhoto(ctx, photo, x, y, photoWidth, photoHeight);
-        }
+        // Regular photo frame
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(x - 2, y - 2, photoWidth + 4, photoHeight + 4);
+        
+        // Photo
+        drawPhoto(ctx, photo, x, y, photoWidth, photoHeight);
     });
 }
 
