@@ -144,6 +144,40 @@
                             <span class="filter-preview color-preview"></span>
                             <span>Color</span>
                         </button>
+                        <button class="filter-btn" data-filter="vintage" onclick="selectFilter('vintage')">
+                            <span class="filter-preview vintage-preview"></span>
+                            <span>Vintage</span>
+                        </button>
+                        <button class="filter-btn" data-filter="retro" onclick="selectFilter('retro')">
+                            <span class="filter-preview retro-preview"></span>
+                            <span>Retro</span>
+                        </button>
+                        <button class="filter-btn" data-filter="polaroid" onclick="selectFilter('polaroid')">
+                            <span class="filter-preview polaroid-preview"></span>
+                            <span>Polaroid</span>
+                        </button>
+                        <button class="filter-btn" data-filter="fadedfilm" onclick="selectFilter('fadedfilm')">
+                            <span class="filter-preview fadedfilm-preview"></span>
+                            <span>Faded Film</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filter Controls (for advanced filters) -->
+                <div class="filter-controls" id="filterControls" style="display: none;">
+                    <div class="slider-group">
+                        <label class="slider-label">
+                            <span>Intensity</span>
+                            <span class="slider-value" id="intensityValue">1.00</span>
+                        </label>
+                        <input type="range" id="intensitySlider" min="0" max="1" step="0.01" value="1" aria-label="Filter intensity">
+                    </div>
+                    <div class="slider-group">
+                        <label class="slider-label">
+                            <span>Grain</span>
+                            <span class="slider-value" id="grainValue">0.50</span>
+                        </label>
+                        <input type="range" id="grainSlider" min="0" max="1" step="0.01" value="0.5" aria-label="Film grain opacity">
                     </div>
                 </div>
                 

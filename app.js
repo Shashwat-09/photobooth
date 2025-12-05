@@ -10,8 +10,42 @@ let stream = null;
 let photos = [];
 let isCapturing = false;
 let currentFilter = 'bw';
+let filterIntensity = 1.0;
+let filterGrain = 0.5;
 const PHOTOS_TO_CAPTURE = 4;
 const COUNTDOWN_SECONDS = 3;
+
+// Filter templates with exact values
+const FILTER_TEMPLATES = {
+    vintage: {
+        sepia: 0.35,
+        contrast: 0.90,
+        brightness: 0.95,
+        saturate: 0.70,
+        hueRotate: -4
+    },
+    retro: {
+        contrast: 1.25,
+        brightness: 0.90,
+        saturate: 1.40,
+        sepia: 0.18,
+        hueRotate: 10
+    },
+    polaroid: {
+        brightness: 1.10,
+        contrast: 0.85,
+        saturate: 0.90,
+        sepia: 0.10,
+        hueRotate: -6
+    },
+    fadedfilm: {
+        brightness: 1.10,
+        contrast: 0.80,
+        saturate: 0.60,
+        sepia: 0.20,
+        hueRotate: 0
+    }
+};
 
 // Audio Context for shutter sound
 let audioContext = null;
@@ -151,6 +185,28 @@ function setupEventListeners() {
         }
     });
     
+    // Filter intensity and grain sliders
+    const intensitySlider = document.getElementById('intensitySlider');
+    const grainSlider = document.getElementById('grainSlider');
+    const intensityValue = document.getElementById('intensityValue');
+    const grainValue = document.getElementById('grainValue');
+    
+    if (intensitySlider && intensityValue) {
+        intensitySlider.addEventListener('input', (e) => {
+            filterIntensity = parseFloat(e.target.value);
+            intensityValue.textContent = filterIntensity.toFixed(2);
+            updateWebcamFilter();
+        });
+    }
+    
+    if (grainSlider && grainValue) {
+        grainSlider.addEventListener('input', (e) => {
+            filterGrain = parseFloat(e.target.value);
+            grainValue.textContent = filterGrain.toFixed(2);
+            // Grain doesn't affect preview, only final capture
+        });
+    }
+    
     // Capture button
     const captureBtn = document.getElementById('capture-button');
     if (captureBtn) {
@@ -269,13 +325,28 @@ function selectFilter(filter) {
     });
     document.querySelector(`[data-filter="${filter}"]`)?.classList.add('active');
     
+    // Show/hide filter controls for advanced filters
+    const filterControls = document.getElementById('filterControls');
+    const advancedFilters = ['vintage', 'retro', 'polaroid', 'fadedfilm'];
+    if (filterControls) {
+        if (advancedFilters.includes(filter)) {
+            filterControls.style.display = 'block';
+        } else {
+            filterControls.style.display = 'none';
+        }
+    }
+    
     // Update webcam preview filter if camera is active
     updateWebcamFilter();
     
     // Update filter display
     const filterNames = {
         'bw': 'B&W',
-        'color': 'Color'
+        'color': 'Color',
+        'vintage': 'Vintage',
+        'retro': 'Retro',
+        'polaroid': 'Polaroid',
+        'fadedfilm': 'Faded Film'
     };
     if (currentFilterDisplay) {
         currentFilterDisplay.textContent = filterNames[filter] || filter;
@@ -283,16 +354,47 @@ function selectFilter(filter) {
 }
 window.selectFilter = selectFilter;
 
+// Convert filter template to CSS filter string
+function cssFromTemplate(template, intensity) {
+    const parts = [];
+    
+    if (template.sepia !== undefined) {
+        parts.push(`sepia(${template.sepia * intensity})`);
+    }
+    if (template.contrast !== undefined) {
+        parts.push(`contrast(${template.contrast * intensity + (1 - intensity)})`);
+    }
+    if (template.brightness !== undefined) {
+        parts.push(`brightness(${template.brightness * intensity + (1 - intensity)})`);
+    }
+    if (template.saturate !== undefined) {
+        parts.push(`saturate(${template.saturate * intensity + (1 - intensity)})`);
+    }
+    if (template.hueRotate !== undefined) {
+        parts.push(`hue-rotate(${template.hueRotate * intensity}deg)`);
+    }
+    
+    return parts.join(' ');
+}
+
 // Update webcam filter
 function updateWebcamFilter() {
     if (!webcam) return;
     
     // Remove all filter classes
-    webcam.classList.remove('filter-bw', 'filter-color');
+    webcam.classList.remove('filter-bw', 'filter-color', 'filter-vintage', 'filter-retro', 'filter-polaroid', 'filter-fadedfilm');
     
-    // Add current filter class
+    // Apply filter based on type
     if (currentFilter === 'bw' || currentFilter === 'color') {
         webcam.classList.add(`filter-${currentFilter}`);
+        webcam.style.filter = '';
+    } else if (FILTER_TEMPLATES[currentFilter]) {
+        // Use template-based filter for advanced filters
+        const template = FILTER_TEMPLATES[currentFilter];
+        const cssFilter = cssFromTemplate(template, filterIntensity);
+        webcam.style.filter = cssFilter;
+    } else {
+        webcam.style.filter = '';
     }
 }
 
@@ -771,6 +873,64 @@ function applyFilter(ctx, width, height, filter) {
             case 'color':
                 // No change - keep original colors
                 break;
+                
+            case 'vintage':
+            case 'retro':
+            case 'polaroid':
+            case 'fadedfilm': {
+                // Use template-based filter processing
+                const template = FILTER_TEMPLATES[filter];
+                if (!template) break;
+                
+                // Apply sepia
+                if (template.sepia !== undefined) {
+                    const sepiaAmount = template.sepia * filterIntensity;
+                    const gray = r * 0.299 + g * 0.587 + b * 0.114;
+                    r = Math.min(255, gray * (1 - sepiaAmount * 0.5) + (gray * 1.2 + 20) * sepiaAmount);
+                    g = Math.min(255, gray * (1 - sepiaAmount * 0.5) + (gray * 1.0 + 10) * sepiaAmount);
+                    b = Math.min(255, gray * (1 - sepiaAmount * 0.5) + (gray * 0.8) * sepiaAmount);
+                }
+                
+                // Apply brightness
+                if (template.brightness !== undefined) {
+                    const brightness = template.brightness * filterIntensity + (1 - filterIntensity);
+                    r = Math.min(255, r * brightness);
+                    g = Math.min(255, g * brightness);
+                    b = Math.min(255, b * brightness);
+                }
+                
+                // Apply contrast
+                if (template.contrast !== undefined) {
+                    const contrast = template.contrast * filterIntensity + (1 - filterIntensity);
+                    r = Math.max(0, Math.min(255, ((r / 255 - 0.5) * contrast + 0.5) * 255));
+                    g = Math.max(0, Math.min(255, ((g / 255 - 0.5) * contrast + 0.5) * 255));
+                    b = Math.max(0, Math.min(255, ((b / 255 - 0.5) * contrast + 0.5) * 255));
+                }
+                
+                // Apply saturation
+                if (template.saturate !== undefined) {
+                    const saturate = template.saturate * filterIntensity + (1 - filterIntensity);
+                    const gray = r * 0.299 + g * 0.587 + b * 0.114;
+                    r = Math.max(0, Math.min(255, gray + (r - gray) * saturate));
+                    g = Math.max(0, Math.min(255, gray + (g - gray) * saturate));
+                    b = Math.max(0, Math.min(255, gray + (b - gray) * saturate));
+                }
+                
+                // Apply hue rotation (simplified)
+                if (template.hueRotate !== undefined) {
+                    const hueRotate = template.hueRotate * filterIntensity;
+                    // Simplified hue rotation approximation
+                    const cos = Math.cos(hueRotate * Math.PI / 180);
+                    const sin = Math.sin(hueRotate * Math.PI / 180);
+                    const newR = r * (0.299 + 0.701 * cos + 0.168 * sin) + g * (0.587 - 0.587 * cos + 0.330 * sin) + b * (0.114 - 0.114 * cos - 0.497 * sin);
+                    const newG = r * (0.299 - 0.299 * cos - 0.328 * sin) + g * (0.587 + 0.413 * cos + 0.035 * sin) + b * (0.114 - 0.114 * cos + 0.292 * sin);
+                    const newB = r * (0.299 - 0.299 * cos + 1.25 * sin) + g * (0.587 - 0.587 * cos - 1.05 * sin) + b * (0.114 + 0.886 * cos - 0.203 * sin);
+                    r = Math.max(0, Math.min(255, newR));
+                    g = Math.max(0, Math.min(255, newG));
+                    b = Math.max(0, Math.min(255, newB));
+                }
+                break;
+            }
         }
         
         data[i] = Math.max(0, Math.min(255, r));
@@ -780,11 +940,29 @@ function applyFilter(ctx, width, height, filter) {
     
     ctx.putImageData(imageData, 0, 0);
     
-    // Apply texture effects based on filter (only for B&W)
+    // Apply texture effects based on filter
     if (filter === 'bw') {
         // Subtle grain for B&W
         addGrain(ctx, width, height, 0.08);
         addVignette(ctx, width, height, 0.15);
+    } else if (filter === 'vintage') {
+        // Heavy grain, scratches, dust, and vignette for vintage
+        addGrain(ctx, width, height, 0.3 * filterGrain);
+        addScratchesAndDust(ctx, width, height);
+        addVignette(ctx, width, height, 0.5 * filterIntensity);
+    } else if (filter === 'retro') {
+        // Heavy film grain for retro
+        addGrain(ctx, width, height, 0.25 * filterGrain);
+        addVignette(ctx, width, height, 0.2 * filterIntensity);
+    } else if (filter === 'polaroid') {
+        // VSCO M3 style - very subtle grain, soft light leaks, minimal vignette
+        addGrain(ctx, width, height, 0.08 * filterGrain);
+        addLightLeaks(ctx, width, height);
+        addVignette(ctx, width, height, 0.1 * filterIntensity);
+    } else if (filter === 'fadedfilm') {
+        // Low contrast faded film look
+        addGrain(ctx, width, height, 0.2 * filterGrain);
+        addVignette(ctx, width, height, 0.3 * filterIntensity);
     }
 }
 
