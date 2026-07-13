@@ -641,6 +641,16 @@ function applyFilterPixels(ctx, width, height, filter) {
             r = gray + (r - gray) * saturate;
             g = gray + (g - gray) * saturate;
             b = gray + (b - gray) * saturate;
+            // hue rotation (matches the CSS hue-rotate matrix)
+            const hueDeg = template.hueRotate * filterIntensity;
+            if (hueDeg !== 0) {
+                const cos = Math.cos(hueDeg * Math.PI / 180);
+                const sin = Math.sin(hueDeg * Math.PI / 180);
+                const nr = r * (0.213 + 0.787 * cos - 0.213 * sin) + g * (0.715 - 0.715 * cos - 0.715 * sin) + b * (0.072 - 0.072 * cos + 0.928 * sin);
+                const ng = r * (0.213 - 0.213 * cos + 0.143 * sin) + g * (0.715 + 0.285 * cos + 0.140 * sin) + b * (0.072 - 0.072 * cos - 0.283 * sin);
+                const nb = r * (0.213 - 0.213 * cos - 0.787 * sin) + g * (0.715 - 0.715 * cos + 0.715 * sin) + b * (0.072 + 0.928 * cos + 0.072 * sin);
+                r = nr; g = ng; b = nb;
+            }
         }
 
         data[i] = Math.max(0, Math.min(255, r));
@@ -787,9 +797,11 @@ async function shareStrip() {
     if (navigator.share) {
         try {
             const blob = await new Promise(resolve => stripCanvas.toBlob(resolve, 'image/png'));
-            const file = new File([blob], 'photostrip.png', { type: 'image/png' });
-            await navigator.share({ files: [file], title: 'My Photo Strip' });
-            return;
+            if (blob) {
+                const file = new File([blob], 'photostrip.png', { type: 'image/png' });
+                await navigator.share({ files: [file], title: 'My Photo Strip' });
+                return;
+            }
         } catch (error) {
             if (error.name === 'AbortError') return; // user cancelled the share sheet
         }
