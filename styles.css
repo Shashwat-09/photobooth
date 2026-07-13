@@ -1230,7 +1230,47 @@ input[type="range"]::-moz-range-thumb {
 /* design variants (mirror the canvas DESIGNS map) */
 .design-black { background: #141414; border-color: #f5f2ea; --pv-frame: #f5f2ea; --pv-text: #f5f2ea; }
 .design-cream { background: #f4ead2; border-color: #7a5c3e; --pv-frame: #7a5c3e; --pv-text: #5b4632; }
+.design-kraft { background: #d9b98c; border-color: #6f4f28; --pv-frame: #6f4f28; --pv-text: #5a3f1e; }
 .design-pink  { background: #ffd9e6; border-color: #c2447a; --pv-frame: #c2447a; --pv-text: #b03a6e; }
+
+.design-gold { background: #fdf8ee; border-color: #c8a24b; --pv-frame: #c8a24b; --pv-text: #8a6d2f; }
+
+.design-gold::before {
+    content: '';
+    position: absolute;
+    inset: 5px;
+    border: 1.5px solid #c8a24b;
+    pointer-events: none;
+}
+
+.design-hearts {
+    background: #fff1f5;
+    border-color: #e0527a;
+    --pv-frame: #e0527a;
+    --pv-text: #d63d6d;
+    padding-left: 30px;
+    padding-right: 30px;
+}
+
+/* heart columns down both sides of the preview */
+.design-hearts::before,
+.design-hearts::after {
+    content: '♥\A♥\A♥\A♥\A♥\A♥\A♥\A♥\A♥\A♥';
+    white-space: pre;
+    position: absolute;
+    top: 10px;
+    bottom: 30px;
+    overflow: hidden;
+    width: 18px;
+    font-size: 12px;
+    line-height: 2.1;
+    text-align: center;
+    color: #e0527a;
+    pointer-events: none;
+}
+
+.design-hearts::before { left: 6px; }
+.design-hearts::after { right: 6px; }
 .design-film  {
     background: #101010;
     border-color: #101010;
@@ -1372,6 +1412,21 @@ input[type="range"]::-moz-range-thumb {
 
 .chip.active .design-swatch {
     border-color: var(--white);
+}
+
+.gold-swatch {
+    background: #fdf8ee;
+    box-shadow: inset 0 0 0 3px rgba(200, 162, 75, 0.9);
+}
+
+.hearts-swatch {
+    background: #fff1f5;
+    color: #e0527a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    line-height: 1;
 }
 
 .film-swatch {

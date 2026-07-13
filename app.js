@@ -64,11 +64,14 @@ const LAYOUTS = {
 };
 
 const DESIGNS = {
-    white: { bg: '#ffffff', border: '#1a1a1a', frame: '#1a1a1a', text: '#1a1a1a', sub: '#666666' },
-    black: { bg: '#141414', border: '#f5f2ea', frame: '#f5f2ea', text: '#f5f2ea', sub: '#9b968a' },
-    cream: { bg: '#f4ead2', border: '#7a5c3e', frame: '#7a5c3e', text: '#5b4632', sub: '#8a7358' },
-    pink:  { bg: '#ffd9e6', border: '#c2447a', frame: '#c2447a', text: '#b03a6e', sub: '#cf7ba0' },
-    film:  { bg: '#101010', border: '#101010', frame: '#2b2b2b', text: '#f2ede2', sub: '#8f8a7e', sprockets: true, hole: '#f2ede2' }
+    white:  { bg: '#ffffff', border: '#1a1a1a', frame: '#1a1a1a', text: '#1a1a1a', sub: '#666666' },
+    black:  { bg: '#141414', border: '#f5f2ea', frame: '#f5f2ea', text: '#f5f2ea', sub: '#9b968a' },
+    cream:  { bg: '#f4ead2', border: '#7a5c3e', frame: '#7a5c3e', text: '#5b4632', sub: '#8a7358' },
+    kraft:  { bg: '#d9b98c', border: '#6f4f28', frame: '#6f4f28', text: '#5a3f1e', sub: '#85653f' },
+    gold:   { bg: '#fdf8ee', border: '#c8a24b', frame: '#c8a24b', text: '#8a6d2f', sub: '#b3945a', doubleBorder: true },
+    pink:   { bg: '#ffd9e6', border: '#c2447a', frame: '#c2447a', text: '#b03a6e', sub: '#cf7ba0' },
+    hearts: { bg: '#fff1f5', border: '#e0527a', frame: '#e0527a', text: '#d63d6d', sub: '#ef8fae', hearts: true },
+    film:   { bg: '#101010', border: '#101010', frame: '#2b2b2b', text: '#f2ede2', sub: '#8f8a7e', sprockets: true, hole: '#f2ede2' }
 };
 
 // Whether the 2D canvas supports the CSS `filter` property. When it does,
@@ -683,7 +686,7 @@ function generatePhotoStrip() {
 
     const layout = LAYOUTS[currentLayout];
     const design = DESIGNS[currentDesign];
-    const side = design.sprockets ? SPROCKET_MARGIN : 0;
+    const side = (design.sprockets || design.hearts) ? SPROCKET_MARGIN : 0;
 
     const stripWidth = STRIP_BORDER * 2 + side * 2
         + layout.cols * PHOTO_W + (layout.cols - 1) * STRIP_GAP;
@@ -704,9 +707,20 @@ function generatePhotoStrip() {
     ctx.lineWidth = 4;
     ctx.strokeRect(2, 2, stripWidth - 4, stripHeight - 4);
 
+    // Inner second border (gold / elegant design)
+    if (design.doubleBorder) {
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(11, 11, stripWidth - 22, stripHeight - 22);
+    }
+
     // Sprocket holes (film design)
     if (design.sprockets) {
         drawSprockets(ctx, stripWidth, stripHeight, design.hole);
+    }
+
+    // Heart columns down both sides (couple design)
+    if (design.hearts) {
+        drawHeartsDecor(ctx, stripWidth, stripHeight, design.border);
     }
 
     // Photos
@@ -731,6 +745,11 @@ function generatePhotoStrip() {
     ctx.textAlign = 'center';
     ctx.font = '28px "Architects Daughter", cursive';
     ctx.fillText('P H O T O B O O T H', stripWidth / 2, footerY + 44);
+
+    if (design.hearts) {
+        drawHeart(ctx, stripWidth / 2 - 165, footerY + 36, 22, design.border);
+        drawHeart(ctx, stripWidth / 2 + 165, footerY + 36, 22, design.border);
+    }
 
     const dateStr = new Date().toLocaleDateString(undefined, {
         year: 'numeric', month: 'short', day: 'numeric'
@@ -758,6 +777,42 @@ function drawSprockets(ctx, width, height, holeColor) {
                 ctx.fillRect(x, y, holeW, holeH);
             }
         }
+    }
+}
+
+// Filled heart centered on (cx, cy); size is the heart's width
+function drawHeart(ctx, cx, cy, size, color, rotation = 0, alpha = 1) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rotation);
+    ctx.scale(size / 24, size / 24);
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, 9);
+    ctx.bezierCurveTo(-5, 4, -10, 0.5, -10, -3.5);
+    ctx.bezierCurveTo(-10, -6.6, -7.6, -9, -4.5, -9);
+    ctx.bezierCurveTo(-2.8, -9, -1.1, -8.2, 0, -6.9);
+    ctx.bezierCurveTo(1.1, -8.2, 2.8, -9, 4.5, -9);
+    ctx.bezierCurveTo(7.6, -9, 10, -6.6, 10, -3.5);
+    ctx.bezierCurveTo(10, 0.5, 5, 4, 0, 9);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+}
+
+// Columns of alternating hearts down both side margins (couple design)
+function drawHeartsDecor(ctx, width, height, color) {
+    const colX = (SPROCKET_MARGIN + STRIP_BORDER) / 2 + 4;
+    const step = 58;
+    let n = 0;
+    for (let y = 34; y < height - STRIP_FOOTER + 10; y += step, n++) {
+        const big = n % 2 === 0;
+        const size = big ? 20 : 13;
+        const alpha = big ? 0.9 : 0.5;
+        const rot = (n % 2 === 0 ? -1 : 1) * 0.26;
+        drawHeart(ctx, colX, y, size, color, rot, alpha);
+        drawHeart(ctx, width - colX, y, size, color, -rot, alpha);
     }
 }
 
