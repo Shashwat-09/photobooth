@@ -5,7 +5,7 @@
 'use strict';
 
 // ---------------------------------------------
-// Constants & Filter Definitions
+// Constants
 // ---------------------------------------------
 const PHOTOS_TO_CAPTURE = 4;
 const COUNTDOWN_SECONDS = 3;
@@ -17,26 +17,59 @@ const PHOTO_H = 360;
 const STRIP_BORDER = 36;
 const STRIP_GAP = 18;
 const STRIP_FOOTER = 96;
-
-const FILTER_NAMES = {
-    bw: 'B&W',
-    color: 'Color',
-    vintage: 'Vintage',
-    retro: 'Retro',
-    polaroid: 'Polaroid',
-    fadedfilm: 'Faded Film'
-};
-
-const ADVANCED_FILTERS = ['vintage', 'retro', 'polaroid', 'fadedfilm'];
-
-const FILTER_TEMPLATES = {
-    vintage: { sepia: 0.35, contrast: 0.90, brightness: 0.95, saturate: 0.70, hueRotate: -4 },
-    retro: { sepia: 0.18, contrast: 1.25, brightness: 0.90, saturate: 1.40, hueRotate: 10 },
-    polaroid: { sepia: 0.10, contrast: 0.85, brightness: 1.10, saturate: 0.90, hueRotate: -6 },
-    fadedfilm: { sepia: 0.20, contrast: 0.80, brightness: 1.10, saturate: 0.60, hueRotate: 0 }
-};
+const SPROCKET_MARGIN = 44;
 
 const COUNTDOWN_WORDS = ['get ready!', 'smile!', 'pose!', 'hold it!'];
+
+// ---------------------------------------------
+// Filters
+// `css` feeds both the live preview (element style) and the capture
+// (ctx.filter / pixel fallback), so the strip matches what you see.
+// `fx` are canvas-only texture passes baked into the final strip
+// (the preview approximates cast + vignette with an overlay).
+// ---------------------------------------------
+const FILTERS = {
+    color:     { name: 'Original',  css: {}, fx: {} },
+    golden:    { name: 'Golden Hr', css: { sepia: 0.25, contrast: 1.05, brightness: 1.08, saturate: 1.30, hue: -8 },
+                 fx: { grain: 0.05, leaks: true, vignette: 0.18, cast: 'rgba(255, 190, 110, 0.10)' } },
+    dispo:     { name: 'Dispo 35',  css: { sepia: 0.08, contrast: 1.18, brightness: 1.05, saturate: 1.25 },
+                 fx: { grain: 0.14, vignette: 0.45, halation: true, stamp: true } },
+    peachy:    { name: 'Peachy',    css: { sepia: 0.10, contrast: 0.92, brightness: 1.12, saturate: 1.15, hue: -10 },
+                 fx: { grain: 0.05, vignette: 0.08, cast: 'rgba(255, 150, 160, 0.12)' } },
+    frosty:    { name: 'Frosty',    css: { contrast: 1.05, brightness: 1.06, saturate: 0.85, hue: 8 },
+                 fx: { grain: 0.06, vignette: 0.12, cast: 'rgba(120, 170, 255, 0.10)' } },
+    y2k:       { name: 'Y2K Cam',   css: { contrast: 1.20, brightness: 1.05, saturate: 1.50, hue: 4 },
+                 fx: { grain: 0.12, vignette: 0.20, stamp: true } },
+    polaroid:  { name: 'Polaroid',  css: { sepia: 0.10, contrast: 0.85, brightness: 1.10, saturate: 0.90, hue: -6 },
+                 fx: { grain: 0.05, leaks: true, vignette: 0.10 } },
+    vintage:   { name: 'Vintage',   css: { sepia: 0.35, contrast: 0.90, brightness: 0.95, saturate: 0.70, hue: -4 },
+                 fx: { grain: 0.16, scratches: true, vignette: 0.40 } },
+    retro:     { name: 'Retro',     css: { sepia: 0.18, contrast: 1.25, brightness: 0.90, saturate: 1.40, hue: 10 },
+                 fx: { grain: 0.13, vignette: 0.20 } },
+    fadedfilm: { name: 'Faded',     css: { sepia: 0.20, contrast: 0.80, brightness: 1.10, saturate: 0.60 },
+                 fx: { grain: 0.10, vignette: 0.30 } },
+    bw:        { name: 'B&W',       css: { grayscale: 1, contrast: 1.10 },
+                 fx: { grain: 0.08, vignette: 0.15 } },
+    noir:      { name: 'Noir',      css: { grayscale: 1, contrast: 1.35, brightness: 0.95 },
+                 fx: { grain: 0.18, vignette: 0.55 } }
+};
+
+// ---------------------------------------------
+// Strip layouts & designs
+// ---------------------------------------------
+const LAYOUTS = {
+    strip4: { cols: 1, rows: 4, count: 4 },
+    strip3: { cols: 1, rows: 3, count: 3 },
+    grid4:  { cols: 2, rows: 2, count: 4 }
+};
+
+const DESIGNS = {
+    white: { bg: '#ffffff', border: '#1a1a1a', frame: '#1a1a1a', text: '#1a1a1a', sub: '#666666' },
+    black: { bg: '#141414', border: '#f5f2ea', frame: '#f5f2ea', text: '#f5f2ea', sub: '#9b968a' },
+    cream: { bg: '#f4ead2', border: '#7a5c3e', frame: '#7a5c3e', text: '#5b4632', sub: '#8a7358' },
+    pink:  { bg: '#ffd9e6', border: '#c2447a', frame: '#c2447a', text: '#b03a6e', sub: '#cf7ba0' },
+    film:  { bg: '#101010', border: '#101010', frame: '#2b2b2b', text: '#f2ede2', sub: '#8f8a7e', sprockets: true, hole: '#f2ede2' }
+};
 
 // Whether the 2D canvas supports the CSS `filter` property. When it does,
 // the exact same filter string used on the live preview is applied at
@@ -56,16 +89,20 @@ const CTX_FILTER_SUPPORTED = (() => {
 // ---------------------------------------------
 let stream = null;
 let photos = [];
+let photoThumbs = [];
 let isCapturing = false;
 let isNavigating = false;
-let currentFilter = 'bw';
+let isStartingCamera = false;
+let isProcessingUpload = false;
+let currentFilter = 'color';
+let currentLayout = 'strip4';
+let currentDesign = 'white';
 let filterIntensity = 1.0;
-let filterGrain = 0.5;
 let audioContext = null;
 
 // DOM elements (assigned on DOMContentLoaded)
 let webcam, stripCanvas, countdownOverlay, countdownNumber, countdownWord,
-    flashOverlay, photoCounter, currentFilterDisplay, cameraFrame;
+    flashOverlay, photoCounter, cameraFrame, stripPreview, filterRow;
 
 const $ = (id) => document.getElementById(id);
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -107,12 +144,12 @@ document.addEventListener('DOMContentLoaded', () => {
     countdownWord = $('countdown-word');
     flashOverlay = $('flash-overlay');
     photoCounter = $('photo-counter');
-    currentFilterDisplay = $('current-filter-display');
     cameraFrame = $('camera-frame');
+    stripPreview = $('strip-preview');
+    filterRow = $('filter-row');
 
     setupEventListeners();
     setupTilt();
-    selectFilter(currentFilter);
 
     document.addEventListener('click', initAudio, { once: true });
 });
@@ -126,11 +163,6 @@ function setupEventListeners() {
         });
     });
 
-    // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', () => selectFilter(btn.dataset.filter));
-    });
-
     // Mode buttons
     $('btn-take-photo').addEventListener('click', startCamera);
     $('btn-upload-photo').addEventListener('click', () => $('photo-upload').click());
@@ -140,23 +172,39 @@ function setupEventListeners() {
     $('btn-camera-back').addEventListener('click', stopAndGoBack);
     $('capture-button').addEventListener('click', startCapture);
 
+    // Edit page
+    $('btn-edit-back').addEventListener('click', () => {
+        photos = [];
+        photoThumbs = [];
+        navigateTo('select-page');
+    });
+    $('btn-print-strip').addEventListener('click', finishAndPrint);
+
+    document.querySelectorAll('.layout-chip').forEach(chip => {
+        chip.addEventListener('click', () => selectLayout(chip.dataset.layout));
+    });
+    document.querySelectorAll('.design-chip').forEach(chip => {
+        chip.addEventListener('click', () => selectDesign(chip.dataset.design));
+    });
+
+    const intensitySlider = $('intensitySlider');
+    intensitySlider.addEventListener('input', (e) => {
+        filterIntensity = parseFloat(e.target.value);
+        $('intensityValue').textContent = filterIntensity.toFixed(2);
+        applyPreviewFilter();
+    });
+
     // Result actions
     $('btn-download').addEventListener('click', downloadStrip);
     $('btn-share').addEventListener('click', shareStrip);
     $('btn-print').addEventListener('click', () => window.print());
     $('btn-restart').addEventListener('click', restart);
 
-    // Filter sliders
-    const intensitySlider = $('intensitySlider');
-    const grainSlider = $('grainSlider');
-    intensitySlider.addEventListener('input', (e) => {
-        filterIntensity = parseFloat(e.target.value);
-        $('intensityValue').textContent = filterIntensity.toFixed(2);
-        updateWebcamFilter();
-    });
-    grainSlider.addEventListener('input', (e) => {
-        filterGrain = parseFloat(e.target.value);
-        $('grainValue').textContent = filterGrain.toFixed(2);
+    // Social links are placeholders until the accounts exist
+    document.querySelectorAll('[data-social]').forEach(link => {
+        link.addEventListener('click', (e) => {
+            if (link.getAttribute('href') === '#') e.preventDefault();
+        });
     });
 }
 
@@ -227,60 +275,28 @@ function playBeep() {
 }
 
 // ---------------------------------------------
-// Filters
+// Filter CSS
 // ---------------------------------------------
-function selectFilter(filter) {
-    if (!FILTER_NAMES[filter]) return;
-    currentFilter = filter;
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.filter === filter);
-    });
-
-    const filterControls = $('filterControls');
-    if (filterControls) {
-        filterControls.classList.toggle('visible', ADVANCED_FILTERS.includes(filter));
-    }
-
-    if (currentFilterDisplay) {
-        currentFilterDisplay.textContent = FILTER_NAMES[filter];
-    }
-
-    updateWebcamFilter();
-}
-window.selectFilter = selectFilter;
-
 // Build the CSS filter string. Intensity blends each parameter toward its
 // neutral value so 0 = original image, 1 = full effect.
 function getFilterCSS(filter = currentFilter, intensity = filterIntensity) {
-    if (filter === 'bw') return 'grayscale(1) contrast(1.1)';
-    if (filter === 'color') return 'none';
-
-    const t = FILTER_TEMPLATES[filter];
+    const t = FILTERS[filter]?.css;
     if (!t) return 'none';
 
     const blend = (value) => value * intensity + (1 - intensity);
-    const parts = [
-        `sepia(${(t.sepia * intensity).toFixed(3)})`,
-        `contrast(${blend(t.contrast).toFixed(3)})`,
-        `brightness(${blend(t.brightness).toFixed(3)})`,
-        `saturate(${blend(t.saturate).toFixed(3)})`,
-        `hue-rotate(${(t.hueRotate * intensity).toFixed(1)}deg)`
-    ];
-    return parts.join(' ');
-}
-
-function updateWebcamFilter() {
-    if (!webcam) return;
-    const css = getFilterCSS();
-    webcam.style.filter = css === 'none' ? '' : css;
+    const parts = [];
+    if (t.grayscale) parts.push(`grayscale(${(t.grayscale * intensity).toFixed(3)})`);
+    if (t.sepia) parts.push(`sepia(${(t.sepia * intensity).toFixed(3)})`);
+    if (t.contrast !== undefined) parts.push(`contrast(${blend(t.contrast).toFixed(3)})`);
+    if (t.brightness !== undefined) parts.push(`brightness(${blend(t.brightness).toFixed(3)})`);
+    if (t.saturate !== undefined) parts.push(`saturate(${blend(t.saturate).toFixed(3)})`);
+    if (t.hue) parts.push(`hue-rotate(${(t.hue * intensity).toFixed(1)}deg)`);
+    return parts.length ? parts.join(' ') : 'none';
 }
 
 // ---------------------------------------------
 // Camera
 // ---------------------------------------------
-let isStartingCamera = false;
-
 async function startCamera() {
     if (isStartingCamera || stream) return;
     isStartingCamera = true;
@@ -299,12 +315,7 @@ async function startCamera() {
         webcam.srcObject = stream;
         await webcam.play();
 
-        updateWebcamFilter();
-        if (currentFilterDisplay) {
-            currentFilterDisplay.textContent = FILTER_NAMES[currentFilter];
-        }
         if (photoCounter) photoCounter.textContent = `0/${PHOTOS_TO_CAPTURE}`;
-
         navigateTo('camera-page');
     } catch (error) {
         stopStream();
@@ -336,8 +347,6 @@ window.stopAndGoBack = stopAndGoBack;
 // ---------------------------------------------
 // Upload flow
 // ---------------------------------------------
-let isProcessingUpload = false;
-
 async function handleUpload(event) {
     if (isProcessingUpload) return;
     const files = Array.from(event.target.files);
@@ -369,7 +378,7 @@ async function handleUpload(event) {
             photos.push(photos[photos.length - 1]);
         }
 
-        await finishAndPrint();
+        openEditPage();
     } finally {
         isProcessingUpload = false;
         modeButtons.forEach(btn => { if (btn) btn.disabled = false; });
@@ -455,18 +464,10 @@ async function startCapture() {
 
     if (completed) {
         stopStream();
-        await finishAndPrint();
+        openEditPage();
     }
 }
 window.startCapture = startCapture;
-
-// Shared "printing..." sequence for both camera and upload flows
-async function finishAndPrint() {
-    navigateTo('printing-page');
-    await startPrintCountdown();
-    generatePhotoStrip();
-    navigateTo('result-page');
-}
 
 async function showCountdown(shotIndex) {
     if (!countdownOverlay || !countdownNumber) return;
@@ -513,6 +514,148 @@ function triggerFlash() {
     }
 }
 
+// ---------------------------------------------
+// Edit page (live preview: filter / layout / design)
+// ---------------------------------------------
+function openEditPage() {
+    buildThumbnails();
+    buildFilterChips();
+    renderPreviewStrip();
+    navigateTo('edit-page');
+}
+
+// Small center-cropped 4:3 thumbnails of the user's own photos,
+// used for both the preview strip and the filter swatches.
+function buildThumbnails() {
+    const THUMB_W = 260;
+    const THUMB_H = 195;
+    photoThumbs = photos.map(photo => {
+        const canvas = document.createElement('canvas');
+        canvas.width = THUMB_W;
+        canvas.height = THUMB_H;
+        drawCoverImage(canvas.getContext('2d'), photo, THUMB_W, THUMB_H);
+        return canvas.toDataURL('image/jpeg', 0.85);
+    });
+}
+
+function buildFilterChips() {
+    if (!filterRow) return;
+    filterRow.innerHTML = '';
+    Object.entries(FILTERS).forEach(([id, def]) => {
+        const btn = document.createElement('button');
+        btn.className = 'chip filter-chip' + (id === currentFilter ? ' active' : '');
+        btn.dataset.filter = id;
+        btn.setAttribute('aria-label', `${def.name} filter`);
+
+        const img = document.createElement('img');
+        img.src = photoThumbs[0] || '';
+        img.alt = '';
+        img.style.filter = getFilterCSS(id, 1);
+
+        const label = document.createElement('span');
+        label.textContent = def.name;
+
+        btn.appendChild(img);
+        btn.appendChild(label);
+        btn.addEventListener('click', () => selectFilter(id));
+        filterRow.appendChild(btn);
+    });
+}
+
+function selectFilter(filter) {
+    if (!FILTERS[filter]) return;
+    currentFilter = filter;
+    document.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.filter === filter);
+    });
+    applyPreviewFilter();
+}
+window.selectFilter = selectFilter;
+
+function selectLayout(layout) {
+    if (!LAYOUTS[layout]) return;
+    currentLayout = layout;
+    document.querySelectorAll('.layout-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.layout === layout);
+    });
+    renderPreviewStrip();
+}
+
+function selectDesign(design) {
+    if (!DESIGNS[design]) return;
+    currentDesign = design;
+    document.querySelectorAll('.design-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.design === design);
+    });
+    renderPreviewStrip();
+}
+
+// Rebuild the mini strip preview (layout + design), then apply the filter
+function renderPreviewStrip() {
+    if (!stripPreview) return;
+    const layout = LAYOUTS[currentLayout];
+
+    stripPreview.className = `strip-preview layout-${currentLayout} design-${currentDesign}`;
+    stripPreview.innerHTML = '';
+
+    const cells = document.createElement('div');
+    cells.className = 'pv-cells';
+    for (let i = 0; i < layout.count; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'pv-cell';
+        const img = document.createElement('img');
+        img.src = photoThumbs[i % Math.max(photoThumbs.length, 1)] || '';
+        img.alt = `photo ${i + 1}`;
+        const tint = document.createElement('div');
+        tint.className = 'pv-tint';
+        cell.appendChild(img);
+        cell.appendChild(tint);
+        cells.appendChild(cell);
+    }
+    stripPreview.appendChild(cells);
+
+    const footer = document.createElement('div');
+    footer.className = 'pv-footer';
+    footer.innerHTML = '<span class="pv-brand">P H O T O B O O T H</span>';
+    stripPreview.appendChild(footer);
+
+    applyPreviewFilter();
+}
+
+// Live preview of the color grade + approximate cast/vignette overlay
+function applyPreviewFilter() {
+    if (!stripPreview) return;
+    const css = getFilterCSS();
+    const fx = FILTERS[currentFilter]?.fx || {};
+    const vignette = (fx.vignette || 0) * filterIntensity;
+
+    stripPreview.querySelectorAll('.pv-cell img').forEach(img => {
+        img.style.filter = css === 'none' ? '' : css;
+    });
+    stripPreview.querySelectorAll('.pv-tint').forEach(tint => {
+        tint.style.background = fx.cast || '';
+        tint.style.boxShadow = vignette > 0
+            ? `inset 0 0 ${Math.round(40 * vignette + 10)}px rgba(0, 0, 0, ${vignette.toFixed(2)})`
+            : '';
+    });
+}
+
+// ---------------------------------------------
+// Printing flow
+// ---------------------------------------------
+async function finishAndPrint() {
+    navigateTo('printing-page');
+    await startPrintCountdown();
+    generatePhotoStrip();
+    // Wide strips (multi-column layouts) cover the side doodles,
+    // so stack the result page annotations instead
+    const resultContainer = document.querySelector('.result-container');
+    if (resultContainer) {
+        resultContainer.classList.toggle('wide-strip', LAYOUTS[currentLayout].cols > 1);
+    }
+    navigateTo('result-page');
+}
+
 async function startPrintCountdown() {
     const printCountdown = $('print-countdown');
     if (!printCountdown) {
@@ -538,40 +681,53 @@ async function startPrintCountdown() {
 function generatePhotoStrip() {
     if (!stripCanvas) return;
 
-    const stripWidth = PHOTO_W + STRIP_BORDER * 2;
-    const stripHeight = STRIP_BORDER + (PHOTO_H * PHOTOS_TO_CAPTURE)
-        + (STRIP_GAP * (PHOTOS_TO_CAPTURE - 1)) + STRIP_FOOTER;
+    const layout = LAYOUTS[currentLayout];
+    const design = DESIGNS[currentDesign];
+    const side = design.sprockets ? SPROCKET_MARGIN : 0;
+
+    const stripWidth = STRIP_BORDER * 2 + side * 2
+        + layout.cols * PHOTO_W + (layout.cols - 1) * STRIP_GAP;
+    const stripHeight = STRIP_BORDER + layout.rows * PHOTO_H
+        + (layout.rows - 1) * STRIP_GAP + STRIP_FOOTER;
 
     stripCanvas.width = stripWidth;
     stripCanvas.height = stripHeight;
 
     const ctx = stripCanvas.getContext('2d');
 
-    // Paper background
-    ctx.fillStyle = '#ffffff';
+    // Background
+    ctx.fillStyle = design.bg;
     ctx.fillRect(0, 0, stripWidth, stripHeight);
 
     // Outer border
-    ctx.strokeStyle = '#1a1a1a';
+    ctx.strokeStyle = design.border;
     ctx.lineWidth = 4;
     ctx.strokeRect(2, 2, stripWidth - 4, stripHeight - 4);
 
-    // Photos
-    photos.forEach((photo, index) => {
-        const x = STRIP_BORDER;
-        const y = STRIP_BORDER + index * (PHOTO_H + STRIP_GAP);
+    // Sprocket holes (film design)
+    if (design.sprockets) {
+        drawSprockets(ctx, stripWidth, stripHeight, design.hole);
+    }
 
-        ctx.fillStyle = '#1a1a1a';
+    // Photos
+    for (let i = 0; i < layout.count; i++) {
+        const photo = photos[i % photos.length];
+        const col = i % layout.cols;
+        const row = Math.floor(i / layout.cols);
+        const x = STRIP_BORDER + side + col * (PHOTO_W + STRIP_GAP);
+        const y = STRIP_BORDER + row * (PHOTO_H + STRIP_GAP);
+
+        ctx.fillStyle = design.frame;
         ctx.fillRect(x - 3, y - 3, PHOTO_W + 6, PHOTO_H + 6);
 
         drawPhoto(ctx, photo, x, y, PHOTO_W, PHOTO_H);
-    });
+    }
 
     // Footer
-    const footerY = STRIP_BORDER + PHOTO_H * PHOTOS_TO_CAPTURE
-        + STRIP_GAP * (PHOTOS_TO_CAPTURE - 1);
+    const footerY = STRIP_BORDER + layout.rows * PHOTO_H
+        + (layout.rows - 1) * STRIP_GAP;
 
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = design.text;
     ctx.textAlign = 'center';
     ctx.font = '28px "Architects Daughter", cursive';
     ctx.fillText('P H O T O B O O T H', stripWidth / 2, footerY + 44);
@@ -579,21 +735,37 @@ function generatePhotoStrip() {
     const dateStr = new Date().toLocaleDateString(undefined, {
         year: 'numeric', month: 'short', day: 'numeric'
     });
-    ctx.font = '24px "Caveat", cursive';
-    ctx.fillStyle = '#666666';
+    ctx.font = '24px Caveat, cursive';
+    ctx.fillStyle = design.sub;
     ctx.fillText(dateStr, stripWidth / 2, footerY + 74);
 }
 
-function drawPhoto(ctx, source, x, y, width, height) {
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = width;
-    tempCanvas.height = height;
-    const tempCtx = tempCanvas.getContext('2d');
+function drawSprockets(ctx, width, height, holeColor) {
+    const holeW = 20;
+    const holeH = 26;
+    const step = 58;
+    const leftX = (SPROCKET_MARGIN + STRIP_BORDER - holeW) / 2 + 6;
+    const rightX = width - leftX - holeW;
 
+    ctx.fillStyle = holeColor;
+    for (let y = 24; y + holeH < height - 12; y += step) {
+        for (const x of [leftX, rightX]) {
+            if (typeof ctx.roundRect === 'function') {
+                ctx.beginPath();
+                ctx.roundRect(x, y, holeW, holeH, 5);
+                ctx.fill();
+            } else {
+                ctx.fillRect(x, y, holeW, holeH);
+            }
+        }
+    }
+}
+
+// Center-crop `source` to cover the target rect
+function drawCoverImage(ctx, source, width, height, filterCSS) {
     const sourceWidth = source.width || source.videoWidth;
     const sourceHeight = source.height || source.videoHeight;
 
-    // Center-crop to target aspect ratio
     const sourceAspect = sourceWidth / sourceHeight;
     const targetAspect = width / height;
     let cropX = 0, cropY = 0, cropWidth = sourceWidth, cropHeight = sourceHeight;
@@ -606,14 +778,25 @@ function drawPhoto(ctx, source, x, y, width, height) {
         cropY = (sourceHeight - cropHeight) / 2;
     }
 
-    const filterCSS = getFilterCSS();
-    if (CTX_FILTER_SUPPORTED) {
-        // Same filter string as the live preview -> WYSIWYG output
-        tempCtx.filter = filterCSS;
-        tempCtx.drawImage(source, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height);
-        tempCtx.filter = 'none';
-    } else {
-        tempCtx.drawImage(source, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height);
+    if (filterCSS && CTX_FILTER_SUPPORTED) {
+        ctx.filter = filterCSS;
+        ctx.drawImage(source, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height);
+        ctx.filter = 'none';
+        return true;
+    }
+    ctx.drawImage(source, cropX, cropY, cropWidth, cropHeight, 0, 0, width, height);
+    return false;
+}
+
+function drawPhoto(ctx, source, x, y, width, height) {
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = width;
+    tempCanvas.height = height;
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // Same filter string as the live preview -> WYSIWYG output
+    const filtered = drawCoverImage(tempCtx, source, width, height, getFilterCSS());
+    if (!filtered) {
         applyFilterPixels(tempCtx, width, height, currentFilter);
     }
 
@@ -624,59 +807,57 @@ function drawPhoto(ctx, source, x, y, width, height) {
 
 // ---------------------------------------------
 // Pixel-level filter fallback (browsers without ctx.filter)
+// Mirrors getFilterCSS order: grayscale, sepia, contrast,
+// brightness, saturate, hue-rotate.
 // ---------------------------------------------
 function applyFilterPixels(ctx, width, height, filter) {
-    if (filter === 'color') return;
+    const t = FILTERS[filter]?.css;
+    if (!t || Object.keys(t).length === 0) return;
 
     const imageData = ctx.getImageData(0, 0, width, height);
     const data = imageData.data;
-    const template = FILTER_TEMPLATES[filter];
     const blend = (value) => value * filterIntensity + (1 - filterIntensity);
+
+    const grayAmt = (t.grayscale || 0) * filterIntensity;
+    const sepiaAmt = (t.sepia || 0) * filterIntensity;
+    const contrast = t.contrast !== undefined ? blend(t.contrast) : 1;
+    const brightness = t.brightness !== undefined ? blend(t.brightness) : 1;
+    const saturate = t.saturate !== undefined ? blend(t.saturate) : 1;
+    const hueDeg = (t.hue || 0) * filterIntensity;
+    const cos = Math.cos(hueDeg * Math.PI / 180);
+    const sin = Math.sin(hueDeg * Math.PI / 180);
 
     for (let i = 0; i < data.length; i += 4) {
         let r = data[i], g = data[i + 1], b = data[i + 2];
 
-        if (filter === 'bw') {
+        if (grayAmt > 0) {
             const gray = r * 0.299 + g * 0.587 + b * 0.114;
-            const adjusted = ((gray / 255 - 0.5) * 1.1 + 0.5) * 255;
-            r = g = b = adjusted;
-        } else if (template) {
-            // sepia
-            const sepiaAmount = template.sepia * filterIntensity;
-            if (sepiaAmount > 0) {
-                const sr = r * 0.393 + g * 0.769 + b * 0.189;
-                const sg = r * 0.349 + g * 0.686 + b * 0.168;
-                const sb = r * 0.272 + g * 0.534 + b * 0.131;
-                r = r + (sr - r) * sepiaAmount;
-                g = g + (sg - g) * sepiaAmount;
-                b = b + (sb - b) * sepiaAmount;
-            }
-            // contrast
-            const contrast = blend(template.contrast);
-            r = ((r / 255 - 0.5) * contrast + 0.5) * 255;
-            g = ((g / 255 - 0.5) * contrast + 0.5) * 255;
-            b = ((b / 255 - 0.5) * contrast + 0.5) * 255;
-            // brightness
-            const brightness = blend(template.brightness);
-            r *= brightness;
-            g *= brightness;
-            b *= brightness;
-            // saturation
-            const saturate = blend(template.saturate);
-            const gray = r * 0.299 + g * 0.587 + b * 0.114;
-            r = gray + (r - gray) * saturate;
-            g = gray + (g - gray) * saturate;
-            b = gray + (b - gray) * saturate;
-            // hue rotation (matches the CSS hue-rotate matrix)
-            const hueDeg = template.hueRotate * filterIntensity;
-            if (hueDeg !== 0) {
-                const cos = Math.cos(hueDeg * Math.PI / 180);
-                const sin = Math.sin(hueDeg * Math.PI / 180);
-                const nr = r * (0.213 + 0.787 * cos - 0.213 * sin) + g * (0.715 - 0.715 * cos - 0.715 * sin) + b * (0.072 - 0.072 * cos + 0.928 * sin);
-                const ng = r * (0.213 - 0.213 * cos + 0.143 * sin) + g * (0.715 + 0.285 * cos + 0.140 * sin) + b * (0.072 - 0.072 * cos - 0.283 * sin);
-                const nb = r * (0.213 - 0.213 * cos - 0.787 * sin) + g * (0.715 - 0.715 * cos + 0.715 * sin) + b * (0.072 + 0.928 * cos + 0.072 * sin);
-                r = nr; g = ng; b = nb;
-            }
+            r = r + (gray - r) * grayAmt;
+            g = g + (gray - g) * grayAmt;
+            b = b + (gray - b) * grayAmt;
+        }
+        if (sepiaAmt > 0) {
+            const sr = r * 0.393 + g * 0.769 + b * 0.189;
+            const sg = r * 0.349 + g * 0.686 + b * 0.168;
+            const sb = r * 0.272 + g * 0.534 + b * 0.131;
+            r = r + (sr - r) * sepiaAmt;
+            g = g + (sg - g) * sepiaAmt;
+            b = b + (sb - b) * sepiaAmt;
+        }
+        r = ((r / 255 - 0.5) * contrast + 0.5) * 255 * brightness;
+        g = ((g / 255 - 0.5) * contrast + 0.5) * 255 * brightness;
+        b = ((b / 255 - 0.5) * contrast + 0.5) * 255 * brightness;
+
+        const gray = r * 0.299 + g * 0.587 + b * 0.114;
+        r = gray + (r - gray) * saturate;
+        g = gray + (g - gray) * saturate;
+        b = gray + (b - gray) * saturate;
+
+        if (hueDeg !== 0) {
+            const nr = r * (0.213 + 0.787 * cos - 0.213 * sin) + g * (0.715 - 0.715 * cos - 0.715 * sin) + b * (0.072 - 0.072 * cos + 0.928 * sin);
+            const ng = r * (0.213 - 0.213 * cos + 0.143 * sin) + g * (0.715 + 0.285 * cos + 0.140 * sin) + b * (0.072 - 0.072 * cos - 0.283 * sin);
+            const nb = r * (0.213 - 0.213 * cos - 0.787 * sin) + g * (0.715 - 0.715 * cos + 0.715 * sin) + b * (0.072 + 0.928 * cos + 0.072 * sin);
+            r = nr; g = ng; b = nb;
         }
 
         data[i] = Math.max(0, Math.min(255, r));
@@ -688,33 +869,22 @@ function applyFilterPixels(ctx, width, height, filter) {
 }
 
 // ---------------------------------------------
-// Texture effects (grain, vignette, scratches, light leaks)
+// Texture effects (grain, vignette, scratches, leaks, halation, stamp)
 // ---------------------------------------------
 function applyTextureEffects(ctx, width, height, filter) {
-    switch (filter) {
-        case 'bw':
-            addGrain(ctx, width, height, 0.08);
-            addVignette(ctx, width, height, 0.15);
-            break;
-        case 'vintage':
-            addGrain(ctx, width, height, 0.3 * filterGrain);
-            addScratchesAndDust(ctx, width, height);
-            addVignette(ctx, width, height, 0.5 * filterIntensity);
-            break;
-        case 'retro':
-            addGrain(ctx, width, height, 0.25 * filterGrain);
-            addVignette(ctx, width, height, 0.2 * filterIntensity);
-            break;
-        case 'polaroid':
-            addGrain(ctx, width, height, 0.08 * filterGrain);
-            addLightLeaks(ctx, width, height);
-            addVignette(ctx, width, height, 0.1 * filterIntensity);
-            break;
-        case 'fadedfilm':
-            addGrain(ctx, width, height, 0.2 * filterGrain);
-            addVignette(ctx, width, height, 0.3 * filterIntensity);
-            break;
+    const fx = FILTERS[filter]?.fx;
+    if (!fx) return;
+
+    if (fx.grain) addGrain(ctx, width, height, fx.grain * filterIntensity);
+    if (fx.scratches) addScratchesAndDust(ctx, width, height);
+    if (fx.leaks) addLightLeaks(ctx, width, height);
+    if (fx.halation) addHalation(ctx, width, height);
+    if (fx.vignette) addVignette(ctx, width, height, fx.vignette * filterIntensity);
+    if (fx.cast) {
+        ctx.fillStyle = fx.cast;
+        ctx.fillRect(0, 0, width, height);
     }
+    if (fx.stamp) addTimestamp(ctx, width, height);
 }
 
 function addGrain(ctx, width, height, intensity = 0.15) {
@@ -805,6 +975,37 @@ function addLightLeaks(ctx, width, height) {
     ctx.fillRect(0, height * 0.6, width, height * 0.4);
 }
 
+// Soft warm flash bloom in the center (disposable-camera look)
+function addHalation(ctx, width, height) {
+    const glow = ctx.createRadialGradient(
+        width / 2, height * 0.45, 0,
+        width / 2, height * 0.45, width * 0.5
+    );
+    glow.addColorStop(0, 'rgba(255, 235, 210, 0.16)');
+    glow.addColorStop(0.6, 'rgba(255, 235, 210, 0.05)');
+    glow.addColorStop(1, 'rgba(255, 235, 210, 0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, width, height);
+}
+
+// Orange digicam date stamp, bottom-right corner
+function addTimestamp(ctx, width, height) {
+    const now = new Date();
+    const dd = String(now.getDate()).padStart(2, '0');
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const yy = String(now.getFullYear()).slice(-2);
+    const text = `${dd} ${mm} '${yy}`;
+
+    ctx.save();
+    ctx.font = 'bold 22px monospace';
+    ctx.textAlign = 'right';
+    ctx.shadowColor = 'rgba(255, 100, 0, 0.55)';
+    ctx.shadowBlur = 6;
+    ctx.fillStyle = 'rgba(255, 150, 50, 0.9)';
+    ctx.fillText(text, width - 16, height - 14);
+    ctx.restore();
+}
+
 // ---------------------------------------------
 // Result actions
 // ---------------------------------------------
@@ -838,9 +1039,23 @@ window.shareStrip = shareStrip;
 
 function restart() {
     photos = [];
+    photoThumbs = [];
     stopStream();
+    currentFilter = 'color';
+    currentLayout = 'strip4';
+    currentDesign = 'white';
+    filterIntensity = 1.0;
+    const slider = $('intensitySlider');
+    if (slider) slider.value = '1';
+    const sliderValue = $('intensityValue');
+    if (sliderValue) sliderValue.textContent = '1.00';
+    document.querySelectorAll('.layout-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.layout === currentLayout);
+    });
+    document.querySelectorAll('.design-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.design === currentDesign);
+    });
     if (photoCounter) photoCounter.textContent = `0/${PHOTOS_TO_CAPTURE}`;
-    selectFilter('bw');
     navigateTo('landing-page');
 }
 window.restart = restart;

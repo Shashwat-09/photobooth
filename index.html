@@ -139,63 +139,14 @@
                     <span class="pics">4pics</span>
                 </div>
 
-                <!-- Filter Selection -->
-                <div class="filter-selection">
-                    <p class="filter-title">choose filter:</p>
-                    <div class="filter-options">
-                        <button class="filter-btn active" data-filter="bw">
-                            <span class="filter-preview bw-preview"></span>
-                            <span>B&amp;W</span>
-                        </button>
-                        <button class="filter-btn" data-filter="color">
-                            <span class="filter-preview color-preview"></span>
-                            <span>Color</span>
-                        </button>
-                        <button class="filter-btn" data-filter="vintage">
-                            <span class="filter-preview vintage-preview"></span>
-                            <span>Vintage</span>
-                        </button>
-                        <button class="filter-btn" data-filter="retro">
-                            <span class="filter-preview retro-preview"></span>
-                            <span>Retro</span>
-                        </button>
-                        <button class="filter-btn" data-filter="polaroid">
-                            <span class="filter-preview polaroid-preview"></span>
-                            <span>Polaroid</span>
-                        </button>
-                        <button class="filter-btn" data-filter="fadedfilm">
-                            <span class="filter-preview fadedfilm-preview"></span>
-                            <span>Faded Film</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Filter Controls (for advanced filters) -->
-                <div class="filter-controls" id="filterControls">
-                    <div class="slider-group">
-                        <label class="slider-label">
-                            <span>Intensity</span>
-                            <span class="slider-value" id="intensityValue">1.00</span>
-                        </label>
-                        <input type="range" id="intensitySlider" min="0" max="1" step="0.01" value="1" aria-label="Filter intensity">
-                    </div>
-                    <div class="slider-group">
-                        <label class="slider-label">
-                            <span>Grain</span>
-                            <span class="slider-value" id="grainValue">0.50</span>
-                        </label>
-                        <input type="range" id="grainSlider" min="0" max="1" step="0.01" value="0.5" aria-label="Film grain opacity">
-                    </div>
-                </div>
-
                 <div class="instructions-panel">
                     <div class="instruction">
                         <span class="step-num">1</span>
-                        <p>Choose<br>your filter<br>style</p>
+                        <p>Snap or<br>upload<br>4 photos</p>
                     </div>
                     <div class="instruction">
                         <span class="step-num">2</span>
-                        <p>Click start<br>and pose for<br>4 photos</p>
+                        <p>Pick filter,<br>layout &amp;<br>strip design</p>
                     </div>
                     <div class="instruction">
                         <span class="step-num">3</span>
@@ -225,7 +176,6 @@
                         </div>
                         <div id="flash-overlay" class="flash-overlay"></div>
                         <div class="photo-counter" id="photo-counter">0/4</div>
-                        <div class="current-filter" id="current-filter-display">B&amp;W</div>
                     </div>
                 </div>
 
@@ -238,7 +188,77 @@
             </div>
         </section>
 
-        <!-- PAGE 4: Printing Page -->
+        <!-- PAGE 4: Edit Page (filter / layout / design with live preview) -->
+        <section id="edit-page" class="page">
+            <button class="back-btn" id="btn-edit-back">← retake</button>
+            <div class="edit-container">
+                <h2 class="edit-title">customize your strip</h2>
+                <div class="edit-body">
+                    <div class="strip-preview-wrap">
+                        <div id="strip-preview" class="strip-preview"></div>
+                    </div>
+
+                    <div class="edit-controls">
+                        <p class="control-label">filter</p>
+                        <div class="chip-row filter-row" id="filter-row"></div>
+
+                        <div class="slider-group compact">
+                            <label class="slider-label">
+                                <span>Intensity</span>
+                                <span class="slider-value" id="intensityValue">1.00</span>
+                            </label>
+                            <input type="range" id="intensitySlider" min="0" max="1" step="0.01" value="1" aria-label="Filter intensity">
+                        </div>
+
+                        <p class="control-label">layout</p>
+                        <div class="chip-row" id="layout-row">
+                            <button class="chip layout-chip active" data-layout="strip4" aria-label="Classic strip of 4">
+                                <span class="layout-icon li-strip4"><i></i><i></i><i></i><i></i></span>
+                                <span>Classic 4</span>
+                            </button>
+                            <button class="chip layout-chip" data-layout="strip3" aria-label="Strip of 3">
+                                <span class="layout-icon li-strip3"><i></i><i></i><i></i></span>
+                                <span>Tall 3</span>
+                            </button>
+                            <button class="chip layout-chip" data-layout="grid4" aria-label="2 by 2 grid">
+                                <span class="layout-icon li-grid4"><i></i><i></i><i></i><i></i></span>
+                                <span>Grid 2×2</span>
+                            </button>
+                        </div>
+
+                        <p class="control-label">strip design</p>
+                        <div class="chip-row" id="design-row">
+                            <button class="chip design-chip active" data-design="white" aria-label="White strip">
+                                <span class="design-swatch" style="background:#ffffff"></span>
+                                <span>White</span>
+                            </button>
+                            <button class="chip design-chip" data-design="black" aria-label="Black strip">
+                                <span class="design-swatch" style="background:#141414"></span>
+                                <span>Black</span>
+                            </button>
+                            <button class="chip design-chip" data-design="cream" aria-label="Cream strip">
+                                <span class="design-swatch" style="background:#f4ead2"></span>
+                                <span>Cream</span>
+                            </button>
+                            <button class="chip design-chip" data-design="pink" aria-label="Pink strip">
+                                <span class="design-swatch" style="background:#ffd9e6"></span>
+                                <span>Pink</span>
+                            </button>
+                            <button class="chip design-chip" data-design="film" aria-label="Film strip with sprocket holes">
+                                <span class="design-swatch film-swatch"></span>
+                                <span>Film</span>
+                            </button>
+                        </div>
+
+                        <button class="print-btn" id="btn-print-strip">
+                            print strip <span class="arrow">→</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PAGE 5: Printing Page -->
         <section id="printing-page" class="page">
             <div class="printing-container">
                 <div class="printer-frame" data-tilt>
@@ -264,7 +284,7 @@
             </div>
         </section>
 
-        <!-- PAGE 5: Result/Pickup Page -->
+        <!-- PAGE 6: Result/Pickup Page -->
         <section id="result-page" class="page">
             <button class="back-btn" data-nav="landing-page">← home</button>
             <div class="result-container">
@@ -278,11 +298,15 @@
                 </div>
 
                 <div class="tag-me">
-                    <p>tag<br>me!</p>
-                    <a href="https://github.com/Shashwat-09" class="social-icon github-icon" target="_blank" rel="noopener noreferrer">
-                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    <p class="tag-text">tag <span class="tag-smiley">☺</span><br><span class="tag-me-word">me</span></p>
+                    <svg class="tag-arrow" viewBox="0 0 40 44" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <path d="M6 4 C 30 10, 34 24, 22 38"/>
+                        <path d="M14 33 L 22 38 L 27 29"/>
+                    </svg>
+                    <a href="#" class="social-icon tiktok-icon" data-social="tiktok" aria-label="TikTok (coming soon)">
+                        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
                     </a>
-                    <a href="https://instagram.com" class="social-icon insta-icon" target="_blank" rel="noopener noreferrer">
+                    <a href="#" class="social-icon insta-icon" data-social="instagram" aria-label="Instagram (coming soon)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="18" cy="6" r="1"/></svg>
                     </a>
                 </div>
