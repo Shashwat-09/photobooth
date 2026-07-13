@@ -153,6 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     setupEventListeners();
     setupTilt();
+    buildCameraFilterChips();
 
     document.addEventListener('click', initAudio, { once: true });
 });
@@ -318,6 +319,7 @@ async function startCamera() {
         webcam.srcObject = stream;
         await webcam.play();
 
+        updateCameraFilter();
         if (photoCounter) photoCounter.textContent = `0/${PHOTOS_TO_CAPTURE}`;
         navigateTo('camera-page');
     } catch (error) {
@@ -568,12 +570,45 @@ function buildFilterChips() {
 function selectFilter(filter) {
     if (!FILTERS[filter]) return;
     currentFilter = filter;
-    document.querySelectorAll('.filter-chip').forEach(chip => {
+    document.querySelectorAll('.filter-chip, .cam-chip').forEach(chip => {
         chip.classList.toggle('active', chip.dataset.filter === filter);
     });
+    updateCameraFilter();
     applyPreviewFilter();
 }
 window.selectFilter = selectFilter;
+
+// Live filter on the webcam preview (capture stays raw; the same filter
+// string is baked in at strip render time, so what you see is what you get)
+function updateCameraFilter() {
+    if (!webcam) return;
+    const css = getFilterCSS();
+    webcam.style.filter = css === 'none' ? '' : css;
+}
+
+// Filter picker shown on the camera page (Snapchat/Dazz-style live preview)
+function buildCameraFilterChips() {
+    const row = $('camera-filter-row');
+    if (!row) return;
+    Object.entries(FILTERS).forEach(([id, def]) => {
+        const btn = document.createElement('button');
+        btn.className = 'chip cam-chip' + (id === currentFilter ? ' active' : '');
+        btn.dataset.filter = id;
+        btn.setAttribute('aria-label', `${def.name} filter`);
+
+        const swatch = document.createElement('span');
+        swatch.className = 'filter-swatch';
+        swatch.style.filter = getFilterCSS(id, 1);
+
+        const label = document.createElement('span');
+        label.textContent = def.name;
+
+        btn.appendChild(swatch);
+        btn.appendChild(label);
+        btn.addEventListener('click', () => selectFilter(id));
+        row.appendChild(btn);
+    });
+}
 
 function selectLayout(layout) {
     if (!LAYOUTS[layout]) return;
@@ -1096,7 +1131,6 @@ function restart() {
     photos = [];
     photoThumbs = [];
     stopStream();
-    currentFilter = 'color';
     currentLayout = 'strip4';
     currentDesign = 'white';
     filterIntensity = 1.0;
@@ -1104,6 +1138,7 @@ function restart() {
     if (slider) slider.value = '1';
     const sliderValue = $('intensityValue');
     if (sliderValue) sliderValue.textContent = '1.00';
+    selectFilter('color');
     document.querySelectorAll('.layout-chip').forEach(chip => {
         chip.classList.toggle('active', chip.dataset.layout === currentLayout);
     });
