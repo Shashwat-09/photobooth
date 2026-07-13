@@ -996,7 +996,38 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .camera-controls {
-    margin-top: 24px;
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+/* live filter picker under the camera */
+.camera-filter-row {
+    max-width: min(540px, 92vw);
+    margin-bottom: 14px;
+}
+
+.cam-chip {
+    padding: 6px 8px;
+    min-width: 64px;
+    font-size: 0.95rem;
+}
+
+.filter-swatch {
+    width: 48px;
+    height: 34px;
+    display: block;
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    background:
+        radial-gradient(circle at 30% 35%, #ffd166 0 22%, transparent 23%),
+        linear-gradient(135deg, #4ecdc4 0%, #5aa9e6 45%, #ff6b6b 100%);
+}
+
+.chip.active .filter-swatch {
+    border-color: var(--white);
 }
 
 .capture-btn {
