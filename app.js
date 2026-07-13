@@ -279,7 +279,11 @@ function updateWebcamFilter() {
 // ---------------------------------------------
 // Camera
 // ---------------------------------------------
+let isStartingCamera = false;
+
 async function startCamera() {
+    if (isStartingCamera || stream) return;
+    isStartingCamera = true;
     try {
         stream = await navigator.mediaDevices.getUserMedia({
             video: {
@@ -303,8 +307,11 @@ async function startCamera() {
 
         navigateTo('camera-page');
     } catch (error) {
+        stopStream();
         console.error('Camera error:', error);
         alert('Could not access camera. Please allow camera permissions and try again.');
+    } finally {
+        isStartingCamera = false;
     }
 }
 window.startCamera = startCamera;
@@ -329,32 +336,44 @@ window.stopAndGoBack = stopAndGoBack;
 // ---------------------------------------------
 // Upload flow
 // ---------------------------------------------
+let isProcessingUpload = false;
+
 async function handleUpload(event) {
+    if (isProcessingUpload) return;
     const files = Array.from(event.target.files);
     event.target.value = ''; // allow re-selecting the same files
     if (files.length === 0) return;
 
-    photos = [];
-    for (const file of files.slice(0, PHOTOS_TO_CAPTURE)) {
-        try {
-            photos.push(await loadImage(file));
-        } catch (error) {
-            console.error('Error loading image:', error);
-            alert(`Error loading image "${file.name}": ${error.message}\n\nPlease try a different image file.`);
+    isProcessingUpload = true;
+    const modeButtons = [$('btn-take-photo'), $('btn-upload-photo')];
+    modeButtons.forEach(btn => { if (btn) btn.disabled = true; });
+
+    try {
+        photos = [];
+        for (const file of files.slice(0, PHOTOS_TO_CAPTURE)) {
+            try {
+                photos.push(await loadImage(file));
+            } catch (error) {
+                console.error('Error loading image:', error);
+                alert(`Error loading image "${file.name}": ${error.message}\n\nPlease try a different image file.`);
+            }
         }
-    }
 
-    if (photos.length === 0) {
-        alert('No images could be loaded. Please try uploading valid image files (JPG, PNG, GIF, or WebP).');
-        return;
-    }
+        if (photos.length === 0) {
+            alert('No images could be loaded. Please try uploading valid image files (JPG, PNG, GIF, or WebP).');
+            return;
+        }
 
-    // Fill remaining slots with duplicates of the last loaded image
-    while (photos.length < PHOTOS_TO_CAPTURE) {
-        photos.push(photos[photos.length - 1]);
-    }
+        // Fill remaining slots with duplicates of the last loaded image
+        while (photos.length < PHOTOS_TO_CAPTURE) {
+            photos.push(photos[photos.length - 1]);
+        }
 
-    await finishAndPrint();
+        await finishAndPrint();
+    } finally {
+        isProcessingUpload = false;
+        modeButtons.forEach(btn => { if (btn) btn.disabled = false; });
+    }
 }
 
 function loadImage(file) {
@@ -406,26 +425,33 @@ async function startCapture() {
     if (captureBtn) captureBtn.disabled = true;
     if (photoCounter) photoCounter.textContent = `0/${PHOTOS_TO_CAPTURE}`;
 
-    for (let i = 0; i < PHOTOS_TO_CAPTURE; i++) {
-        if (!isCapturing) break;
+    let completed = false;
+    try {
+        for (let i = 0; i < PHOTOS_TO_CAPTURE; i++) {
+            if (!isCapturing) break;
 
-        await showCountdown(i);
-        if (!isCapturing) break;
+            await showCountdown(i);
+            if (!isCapturing) break;
 
-        photos.push(captureFrame());
-        playShutterSound();
-        triggerFlash();
+            photos.push(captureFrame());
+            playShutterSound();
+            triggerFlash();
 
-        if (photoCounter) photoCounter.textContent = `${i + 1}/${PHOTOS_TO_CAPTURE}`;
+            if (photoCounter) photoCounter.textContent = `${i + 1}/${PHOTOS_TO_CAPTURE}`;
 
-        if (i < PHOTOS_TO_CAPTURE - 1) {
-            await delay(800);
+            if (i < PHOTOS_TO_CAPTURE - 1) {
+                await delay(800);
+            }
         }
-    }
 
-    const completed = isCapturing && photos.length === PHOTOS_TO_CAPTURE;
-    isCapturing = false;
-    if (captureBtn) captureBtn.disabled = false;
+        completed = isCapturing && photos.length === PHOTOS_TO_CAPTURE;
+    } catch (error) {
+        console.error('Capture error:', error);
+    } finally {
+        isCapturing = false;
+        if (captureBtn) captureBtn.disabled = false;
+        if (countdownOverlay) countdownOverlay.classList.add('hidden');
+    }
 
     if (completed) {
         stopStream();
@@ -455,7 +481,7 @@ async function showCountdown(shotIndex) {
         countdownNumber.textContent = i;
         countdownNumber.style.animation = 'none';
         void countdownNumber.offsetWidth; // force reflow to restart animation
-        countdownNumber.style.animation = 'countdownPop 0.9s ease-out';
+        countdownNumber.style.animation = 'countdown-pop 0.9s ease-out';
         await delay(1000);
     }
 
@@ -498,7 +524,7 @@ async function startPrintCountdown() {
         printCountdown.textContent = i;
         printCountdown.style.animation = 'none';
         void printCountdown.offsetWidth;
-        printCountdown.style.animation = 'countdownPop 0.9s ease-out';
+        printCountdown.style.animation = 'countdown-pop 0.9s ease-out';
         await delay(1000);
     }
 

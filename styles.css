@@ -27,7 +27,7 @@ html {
 }
 
 body {
-    font-family: 'Caveat', cursive;
+    font-family: Caveat, cursive;
     min-height: 100vh;
     display: flex;
     justify-content: center;
@@ -82,15 +82,15 @@ body::before {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    animation: pageIn 0.55s var(--pop) both;
+    animation: page-in 0.55s var(--pop) both;
 }
 
 .page.page-exit {
-    animation: pageOut 0.32s ease-in both;
+    animation: page-out 0.32s ease-in both;
     pointer-events: none;
 }
 
-@keyframes pageIn {
+@keyframes page-in {
     0% {
         opacity: 0;
         transform: translateY(36px) rotateX(10deg) scale(0.96);
@@ -103,7 +103,7 @@ body::before {
     }
 }
 
-@keyframes pageOut {
+@keyframes page-out {
     0% {
         opacity: 1;
         transform: translateY(0) rotateX(0deg) scale(1);
@@ -138,7 +138,7 @@ body::before {
     border: 2px solid var(--ink);
     border-radius: 4px;
     padding: 10px 20px;
-    font-family: 'Caveat', cursive;
+    font-family: Caveat, cursive;
     font-size: 1.3rem;
     cursor: pointer;
     z-index: 1000;
@@ -173,10 +173,10 @@ body::before {
     flex-direction: column;
     align-items: center;
     position: relative;
-    animation: boothFloat 6s ease-in-out infinite;
+    animation: booth-float 6s ease-in-out infinite;
 }
 
-@keyframes boothFloat {
+@keyframes booth-float {
     0%, 100% { translate: 0 0; }
     50% { translate: 0 -8px; }
 }
@@ -190,11 +190,11 @@ body::before {
     height: 46px;
     border-radius: 50%;
     background: radial-gradient(ellipse at center, rgba(26, 22, 12, 0.35), transparent 68%);
-    animation: shadowBreath 6s ease-in-out infinite;
+    animation: shadow-breath 6s ease-in-out infinite;
     pointer-events: none;
 }
 
-@keyframes shadowBreath {
+@keyframes shadow-breath {
     0%, 100% { opacity: 1; scale: 1; }
     50% { opacity: 0.7; scale: 0.94 1; }
 }
@@ -210,12 +210,12 @@ body::before {
     align-items: center;
     gap: 22px;
     transform-origin: top center;
-    animation: signSwing 5s ease-in-out infinite;
+    animation: sign-swing 5s ease-in-out infinite;
     box-shadow: 0 10px 24px -14px rgba(26, 22, 12, 0.55);
     z-index: 5;
 }
 
-@keyframes signSwing {
+@keyframes sign-swing {
     0%, 100% { rotate: -1.2deg; }
     50% { rotate: 1.2deg; }
 }
@@ -235,14 +235,14 @@ body::before {
     border-radius: 50%;
     background: #ffd76a;
     box-shadow: 0 0 12px 3px rgba(255, 205, 80, 0.75);
-    animation: bulbBlink 1.6s ease-in-out infinite;
+    animation: bulb-blink 1.6s ease-in-out infinite;
 }
 
 .sign-bulb:last-child {
     animation-delay: 0.8s;
 }
 
-@keyframes bulbBlink {
+@keyframes bulb-blink {
     0%, 100% { background: #ffd76a; box-shadow: 0 0 14px 4px rgba(255, 205, 80, 0.8); }
     50% { background: #fff3cf; box-shadow: 0 0 4px 1px rgba(255, 205, 80, 0.3); }
 }
@@ -379,11 +379,11 @@ body::before {
             var(--accent-light) 20px 30px,
             var(--accent) 30px 38px
         );
-    animation: curtainSway 7s ease-in-out infinite;
+    animation: curtain-sway 7s ease-in-out infinite;
     transform-origin: top center;
 }
 
-@keyframes curtainSway {
+@keyframes curtain-sway {
     0%, 100% { transform: translateX(-50%) skewX(0deg); background-position: 0 0; }
     30% { transform: translateX(-50.5%) skewX(0.8deg); background-position: 4px 0; }
     65% { transform: translateX(-49.5%) skewX(-0.8deg); background-position: -4px 0; }
@@ -410,10 +410,10 @@ body::before {
     width: 70%;
     height: 24px;
     background: radial-gradient(ellipse at bottom, rgba(255, 214, 106, 0.55), transparent 70%);
-    animation: glowPulse 3s ease-in-out infinite;
+    animation: glow-pulse 3s ease-in-out infinite;
 }
 
-@keyframes glowPulse {
+@keyframes glow-pulse {
     0%, 100% { opacity: 0.9; }
     50% { opacity: 0.4; }
 }
@@ -438,10 +438,10 @@ body::before {
     overflow: hidden;
     box-shadow: 0 10px 22px -8px rgba(26, 22, 12, 0.7);
     transition: transform 0.25s var(--pop), box-shadow 0.25s, background 0.25s;
-    animation: enterPulse 2.4s ease-in-out infinite;
+    animation: enter-pulse 2.4s ease-in-out infinite;
 }
 
-@keyframes enterPulse {
+@keyframes enter-pulse {
     0%, 100% { box-shadow: 0 10px 22px -8px rgba(26, 22, 12, 0.7), 0 0 0 0 rgba(201, 42, 58, 0.45); }
     50% { box-shadow: 0 10px 22px -8px rgba(26, 22, 12, 0.7), 0 0 0 12px rgba(201, 42, 58, 0); }
 }
@@ -477,10 +477,10 @@ body::before {
 .enter-btn .arrow {
     font-size: 1.1rem;
     display: inline-block;
-    animation: arrowNudge 1.4s ease-in-out infinite;
+    animation: arrow-nudge 1.4s ease-in-out infinite;
 }
 
-@keyframes arrowNudge {
+@keyframes arrow-nudge {
     0%, 100% { transform: translateX(0); }
     50% { transform: translateX(4px); }
 }
@@ -614,7 +614,7 @@ body::before {
     font-size: 2.5rem;
     background: var(--white);
     box-shadow: 0 6px 0 -2px rgba(26, 26, 26, 0.25);
-    animation: boothFloat 4s ease-in-out infinite;
+    animation: booth-float 4s ease-in-out infinite;
 }
 
 .info-card h2 {
@@ -672,7 +672,7 @@ body::before {
     font-size: 3rem;
     margin-bottom: 20px;
     display: inline-block;
-    animation: boothFloat 3.4s ease-in-out infinite;
+    animation: booth-float 3.4s ease-in-out infinite;
 }
 
 .contact-email {
@@ -786,10 +786,10 @@ body::before {
 
 /* camera shake when the flash fires */
 .screen-frame.shake {
-    animation: cameraShake 0.4s ease-in-out;
+    animation: camera-shake 0.4s ease-in-out;
 }
 
-@keyframes cameraShake {
+@keyframes camera-shake {
     0%, 100% { translate: 0 0; }
     20% { translate: -4px 2px; }
     40% { translate: 4px -3px; }
@@ -831,13 +831,13 @@ body::before {
     font-size: 1.4rem;
     line-height: 1.1;
     text-align: right;
-    animation: boothFloat 5s ease-in-out infinite;
+    animation: booth-float 5s ease-in-out infinite;
 }
 
 .arrow-right {
     display: inline-block;
     margin-left: 5px;
-    animation: arrowNudge 1.4s ease-in-out infinite;
+    animation: arrow-nudge 1.4s ease-in-out infinite;
 }
 
 .price-tag {
@@ -856,10 +856,10 @@ body::before {
     line-height: 1;
     background: var(--white);
     box-shadow: 4px 5px 0 rgba(26, 26, 26, 0.3);
-    animation: priceWobble 4s ease-in-out infinite;
+    animation: price-wobble 4s ease-in-out infinite;
 }
 
-@keyframes priceWobble {
+@keyframes price-wobble {
     0%, 100% { rotate: 8deg; translate: 0 0; }
     50% { rotate: 13deg; translate: 0 -6px; }
 }
@@ -895,7 +895,7 @@ body::before {
     border-radius: 6px;
     background: var(--white);
     padding: 10px 14px;
-    font-family: 'Caveat', cursive;
+    font-family: Caveat, cursive;
     font-size: 1.1rem;
     cursor: pointer;
     display: flex;
@@ -984,7 +984,7 @@ body::before {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 8px;
-    font-family: 'Caveat', cursive;
+    font-family: Caveat, cursive;
     font-size: 1.15rem;
 }
 
@@ -999,10 +999,14 @@ input[type="range"] {
     height: 8px;
     border-radius: 4px;
     background: linear-gradient(90deg, var(--ink), var(--gray));
-    outline: none;
     -webkit-appearance: none;
     appearance: none;
     cursor: pointer;
+}
+
+input[type="range"]:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 4px;
 }
 
 input[type="range"]::-webkit-slider-thumb {
@@ -1099,7 +1103,7 @@ input[type="range"]::-moz-range-thumb {
     gap: 10px;
     box-shadow: 5px 5px 0 var(--ink);
     transition: all 0.2s var(--pop);
-    animation: enterPulse 2.6s ease-in-out infinite;
+    animation: enter-pulse 2.6s ease-in-out infinite;
 }
 
 .capture-btn:hover:not(:disabled) {
@@ -1147,10 +1151,10 @@ input[type="range"]::-moz-range-thumb {
     height: 190px;
     border: 4px dashed rgba(255, 255, 255, 0.5);
     border-radius: 50%;
-    animation: ringSpin 6s linear infinite;
+    animation: ring-spin 6s linear infinite;
 }
 
-@keyframes ringSpin {
+@keyframes ring-spin {
     to { transform: rotate(360deg); }
 }
 
@@ -1159,25 +1163,25 @@ input[type="range"]::-moz-range-thumb {
     font-size: 9rem;
     color: var(--white);
     text-shadow: 0 0 50px rgba(255, 255, 255, 0.8);
-    animation: countdownPop 0.9s ease-out;
+    animation: countdown-pop 0.9s ease-out;
     line-height: 1;
 }
 
 .countdown-word {
-    font-family: 'Caveat', cursive;
+    font-family: Caveat, cursive;
     font-size: 2rem;
     color: #ffd76a;
     margin-top: 14px;
     text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
-    animation: wordBob 1s ease-in-out infinite;
+    animation: word-bob 1s ease-in-out infinite;
 }
 
-@keyframes wordBob {
+@keyframes word-bob {
     0%, 100% { transform: translateY(0) rotate(-2deg); }
     50% { transform: translateY(-5px) rotate(2deg); }
 }
 
-@keyframes countdownPop {
+@keyframes countdown-pop {
     0% { transform: scale(0.2) rotate(-8deg); opacity: 0; }
     50% { transform: scale(1.4) rotate(2deg); opacity: 1; }
     100% { transform: scale(1) rotate(0deg); opacity: 1; }
@@ -1222,7 +1226,7 @@ input[type="range"]::-moz-range-thumb {
     background: rgba(255, 255, 255, 0.92);
     color: var(--ink);
     padding: 5px 12px;
-    font-family: 'Caveat', cursive;
+    font-family: Caveat, cursive;
     font-size: 1.1rem;
     border: 2px solid var(--ink);
     border-radius: 4px;
@@ -1248,10 +1252,10 @@ input[type="range"]::-moz-range-thumb {
     margin-bottom: 20px;
     background: linear-gradient(170deg, var(--white), #f1ead9);
     box-shadow: 6px 6px 0 rgba(26, 26, 26, 0.85), var(--shadow-soft);
-    animation: printerHum 0.5s linear infinite;
+    animation: printer-hum 0.5s linear infinite;
 }
 
-@keyframes printerHum {
+@keyframes printer-hum {
     0%, 100% { translate: 0 0; }
     25% { translate: 0.6px -0.4px; }
     75% { translate: -0.6px 0.4px; }
@@ -1356,10 +1360,10 @@ input[type="range"]::-moz-range-thumb {
 }
 
 .page.active .strip-emerging {
-    animation: stripEmerge 3.6s cubic-bezier(0.25, 0.8, 0.4, 1) 0.4s forwards;
+    animation: strip-emerge 3.6s cubic-bezier(0.25, 0.8, 0.4, 1) 0.4s forwards;
 }
 
-@keyframes stripEmerge {
+@keyframes strip-emerge {
     0% { transform: translateY(-105%); }
     100% { transform: translateY(8%); }
 }
@@ -1383,10 +1387,10 @@ input[type="range"]::-moz-range-thumb {
     right: calc(50% - 330px);
     top: 70px;
     text-align: left;
-    animation: headerWrite 0.8s 0.5s var(--pop) both;
+    animation: header-write 0.8s 0.5s var(--pop) both;
 }
 
-@keyframes headerWrite {
+@keyframes header-write {
     0% { opacity: 0; transform: translateX(20px) rotate(4deg); }
     100% { opacity: 1; transform: translateX(0) rotate(0deg); }
 }
@@ -1403,11 +1407,11 @@ input[type="range"]::-moz-range-thumb {
 
 .strip-display {
     margin: 40px 0 20px;
-    animation: stripDrop 1s var(--pop) both;
+    animation: strip-drop 1s var(--pop) both;
     transform-origin: top center;
 }
 
-@keyframes stripDrop {
+@keyframes strip-drop {
     0% {
         opacity: 0;
         transform: translateY(-70px) rotate(-5deg) rotateX(20deg);
@@ -1449,7 +1453,7 @@ input[type="range"]::-moz-range-thumb {
     flex-direction: column;
     align-items: center;
     gap: 15px;
-    animation: headerWrite 0.8s 0.7s var(--pop) both;
+    animation: header-write 0.8s 0.7s var(--pop) both;
 }
 
 .tag-me p {
@@ -1475,10 +1479,10 @@ input[type="range"]::-moz-range-thumb {
     position: absolute;
     right: calc(50% - 290px);
     bottom: 120px;
-    animation: scissorsWiggle 3s ease-in-out infinite;
+    animation: scissors-wiggle 3s ease-in-out infinite;
 }
 
-@keyframes scissorsWiggle {
+@keyframes scissors-wiggle {
     0%, 100% { transform: rotate(0deg) translateX(0); }
     50% { transform: rotate(-6deg) translateX(-6px); }
 }
@@ -1495,7 +1499,7 @@ input[type="range"]::-moz-range-thumb {
     margin-top: 20px;
     flex-wrap: wrap;
     justify-content: center;
-    animation: pageIn 0.6s 0.35s var(--pop) both;
+    animation: page-in 0.6s 0.35s var(--pop) both;
 }
 
 .action-btn {
@@ -1655,6 +1659,7 @@ input[type="range"]::-moz-range-thumb {
     *::before,
     *::after {
         animation-duration: 0.01ms !important;
+        animation-delay: 0s !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
     }
