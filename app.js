@@ -100,6 +100,7 @@ let isProcessingUpload = false;
 let currentFilter = 'color';
 let currentLayout = 'strip4';
 let currentDesign = 'white';
+let photoSource = 'camera'; // 'camera' picks the filter live; 'upload' picks it on the edit page
 let filterIntensity = 1.0;
 let audioContext = null;
 
@@ -383,6 +384,7 @@ async function handleUpload(event) {
             photos.push(photos[photos.length - 1]);
         }
 
+        photoSource = 'upload';
         openEditPage();
     } finally {
         isProcessingUpload = false;
@@ -469,6 +471,7 @@ async function startCapture() {
 
     if (completed) {
         stopStream();
+        photoSource = 'camera';
         openEditPage();
     }
 }
@@ -524,7 +527,14 @@ function triggerFlash() {
 // ---------------------------------------------
 function openEditPage() {
     buildThumbnails();
-    buildFilterChips();
+
+    // The camera flow already picked its filter live, so don't show the
+    // picker twice; uploads never saw the camera, so they pick it here.
+    const filterSection = $('filter-section');
+    const showFilterPicker = photoSource === 'upload';
+    if (filterSection) filterSection.style.display = showFilterPicker ? '' : 'none';
+    if (showFilterPicker) buildFilterChips();
+
     renderPreviewStrip();
     navigateTo('edit-page');
 }
